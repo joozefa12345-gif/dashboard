@@ -3,57 +3,335 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rumble System</title>
+<title>Rumble System | Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
-* { box-sizing: border-box; }
-body {
+* {
   margin: 0;
-  font-family: Arial, sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
   background: #050914;
   color: white;
+  font-family: 'Cairo', sans-serif;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background: #091225;
+  border-left: 1px solid #14284a;
+  padding: 25px 18px;
+}
+
+.logo {
   text-align: center;
+  font-size: 25px;
+  font-weight: 900;
+  color: #168bff;
+  margin-bottom: 45px;
 }
-header {
-  padding: 25px;
-  background: #0b1428;
-  border-bottom: 1px solid #1677ff;
-}
-h1 { color: #168bff; font-size: 38px; }
-main { padding: 70px 20px; }
-h2 { font-size: 30px; }
-p { color: #aab8ce; font-size: 17px; }
-button {
-  background: #087cff;
+
+.logo span {
   color: white;
-  border: 0;
-  padding: 15px 30px;
-  border-radius: 10px;
-  font-size: 17px;
-  margin-top: 20px;
 }
+
+.menu-title {
+  color: #60799e;
+  font-size: 12px;
+  margin: 20px 10px;
+}
+
+.menu a {
+  display: block;
+  text-decoration: none;
+  color: #a9bad3;
+  padding: 13px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: .3s;
+}
+
+.menu a:hover,
+.menu a.active {
+  background: #102b50;
+  color: #36a0ff;
+}
+
+.main {
+  flex: 1;
+  padding: 30px;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.topbar h2 {
+  font-size: 25px;
+}
+
+.login {
+  background: #168bff;
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 9px;
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.welcome {
+  background: linear-gradient(120deg,#102e57,#071326);
+  border: 1px solid #174b80;
+  border-radius: 18px;
+  padding: 35px;
+  margin-bottom: 30px;
+}
+
+.welcome h1 {
+  font-size: 30px;
+  color: #45aaff;
+  margin-bottom: 10px;
+}
+
+.welcome p {
+  color: #b2c4dc;
+  line-height: 2;
+}
+
+.section-title {
+  margin-bottom: 20px;
+  font-size: 21px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(190px,1fr));
+  gap: 18px;
+}
+
 .card {
-  max-width: 500px;
-  margin: 35px auto;
-  padding: 25px;
-  background: #101d35;
-  border: 1px solid #173e70;
+  background: #0c1830;
+  border: 1px solid #19345b;
   border-radius: 15px;
+  padding: 25px;
+  transition: .3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  border-color: #168bff;
+}
+
+.card .icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.card h3 {
+  color: #91a9c9;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 24px;
+  font-weight: 800;
+  color: #39a2ff;
+}
+
+.status {
+  margin-top: 30px;
+  background: #0c1830;
+  border: 1px solid #19345b;
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.status p {
+  color: #a9bad3;
+  margin-top: 10px;
+  line-height: 2;
+}
+
+.badge {
+  display: inline-block;
+  background: #26364c;
+  color: #a9c9e9;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+footer {
+  text-align: center;
+  color: #506481;
+  padding: 35px 10px;
+  font-size: 13px;
+}
+
+@media(max-width:750px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-left: none;
+    border-bottom: 1px solid #14284a;
+  }
+
+  .logo {
+    margin-bottom: 15px;
+  }
+
+  .menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .menu a {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .menu-title {
+    display: none;
+  }
+
+  .main {
+    padding: 18px;
+  }
+
+  .welcome {
+    padding: 23px;
+  }
+
+  .welcome h1 {
+    font-size: 23px;
+  }
+
+  .topbar h2 {
+    font-size: 20px;
+  }
 }
 </style>
 </head>
+
 <body>
-<header>
-<h1>RUMBLE SYSTEM</h1>
-<p>THE ULTIMATE DISCORD EXPERIENCE</p>
-</header>
-<main>
-<h2>مرحباً بك في Rumble System</h2>
-<p>لوحة التحكم الاحترافية الخاصة بسيرفر Discord الخاص بك.</p>
-<div class="card">
-<h2>🚀 قريباً</h2>
-<p>نعمل على تجهيز لوحة تحكم متكاملة لإدارة البوت.</p>
-<button>Coming Soon</button>
+
+<div class="container">
+
+<aside class="sidebar">
+
+<div class="logo">
+RUMBLE <span>SYSTEM</span>
 </div>
+
+<div class="menu-title">القائمة الرئيسية</div>
+
+<nav class="menu">
+<a href="#" class="active">🏠 الرئيسية</a>
+<a href="#statistics">📊 الإحصائيات</a>
+<a href="#bot">🤖 حالة البوت</a>
+<a href="#about">ℹ️ حول النظام</a>
+</nav>
+
+</aside>
+
+<main class="main">
+
+<div class="topbar">
+<h2>لوحة التحكم</h2>
+<button class="login" type="button">
+🎮 Login with Discord
+</button>
+</div>
+
+<section class="welcome">
+<h1>مرحباً بك في Rumble System 👑</h1>
+<p>
+لوحة التحكم الرسمية لنظام Rumble System.
+<br>
+تحكم في تجربة استخدامك وتابع حالة البوت وإحصائياته من مكان واحد.
+</p>
+</section>
+
+<h2 class="section-title" id="statistics">
+📊 الإحصائيات
+</h2>
+
+<div class="cards">
+
+<div class="card">
+<div class="icon">🌐</div>
+<h3>عدد السيرفرات</h3>
+<p>--</p>
+</div>
+
+<div class="card">
+<div class="icon">👥</div>
+<h3>عدد المستخدمين</h3>
+<p>--</p>
+</div>
+
+<div class="card">
+<div class="icon">⚡</div>
+<h3>عمليات التشفير</h3>
+<p>--</p>
+</div>
+
+<div class="card">
+<div class="icon">🤖</div>
+<h3>حالة النظام</h3>
+<p>--</p>
+</div>
+
+</div>
+
+<section class="status" id="bot">
+<h2>🤖 نظام Rumble System</h2>
+<p>
+أهلاً بك في لوحة التحكم الخاصة بالبوت.
+<br>
+سيتم ربط البيانات الحقيقية وعرض حالة البوت هنا في المرحلة القادمة.
+</p>
+<span class="badge">واجهة قيد التطوير</span>
+</section>
+
+<section class="status" id="about">
+<h2>💙 عن Rumble System</h2>
+<p>
+نظام احترافي لإدارة ومتابعة خدمات Discord.
+<br>
+نسعى لتقديم تجربة سهلة وسريعة وآمنة.
+</p>
+</section>
+
+<footer>
+© 2026 Rumble System. All Rights Reserved.
+</footer>
+
 </main>
+</div>
+
 </body>
 </html>
