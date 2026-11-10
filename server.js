@@ -100,7 +100,7 @@ app.get("/auth/discord", (req, res) => {
         client_id: CLIENT_ID,
         redirect_uri: REDIRECT_URI,
         response_type: "code",
-        scope: "identify",
+        scope: "identify guilds",
         state
     });
 
