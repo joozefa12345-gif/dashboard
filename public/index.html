@@ -344,6 +344,7 @@ RUMBLE <span>SYSTEM</span>
 <a href="#statistics">📊 الإحصائيات</a>
 <a href="#bot">🤖 حالة البوت</a>
 <a href="#about">ℹ️ حول النظام</a>
+  <a href="#servers">سيرفراتي</a>
 </nav>
 
 </aside>
@@ -416,7 +417,12 @@ RUMBLE <span>SYSTEM</span>
 نسعى لتقديم تجربة سهلة وسريعة وآمنة.
 </p>
 </section>
+<section class="status" id="servers">
+    <h2>🖥️ سيرفراتي</h2>
+    <p>جارٍ تحميل السيرفرات المشتركة مع Rumble System...</p>
 
+    <div id="guildList"></div>
+</section>
 <footer>
 © 2026 Rumble System. All Rights Reserved.
 </footer>
@@ -551,5 +557,70 @@ logoutButton.onclick = async () => {
 
     <button id="closeProfile" type="button">إغلاق</button>
   </div>
+  <script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const guildList = document.getElementById("guildList");
+    const serversSection = document.getElementById("servers");
+
+    if (!guildList || !serversSection) return;
+
+    const message = serversSection.querySelector("p");
+
+    try {
+        const response = await fetch("/api/guilds", {
+            credentials: "same-origin",
+            cache: "no-store"
+        });
+
+        if (response.status === 401) {
+            message.textContent = "يرجى تسجيل الدخول باستخدام Discord أولاً.";
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("تعذر تحميل السيرفرات");
+        }
+
+        const data = await response.json();
+        guildList.replaceChildren();
+
+        if (!data.guilds || data.guilds.length === 0) {
+            message.textContent = "لا توجد سيرفرات مشتركة متاحة.";
+            return;
+        }
+
+        message.textContent = "السيرفرات المشتركة مع Rumble System:";
+
+        data.guilds.forEach(guild => {
+            const card = document.createElement("div");
+            card.className = "server-card";
+
+            const icon = document.createElement("img");
+            icon.className = "server-icon";
+            icon.alt = "أيقونة السيرفر";
+
+            if (guild.icon) {
+                icon.src =
+                    `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+            } else {
+                icon.style.display = "none";
+            }
+
+            const name = document.createElement("h3");
+            name.textContent = guild.name;
+
+            const status = document.createElement("p");
+            status.textContent = "✅ البوت موجود في هذا السيرفر";
+
+            card.append(icon, name, status);
+            guildList.appendChild(card);
+        });
+
+    } catch (error) {
+        console.error(error);
+        message.textContent = "حدث خطأ أثناء تحميل السيرفرات.";
+    }
+});
+  </script>
 </body>
 </html>
