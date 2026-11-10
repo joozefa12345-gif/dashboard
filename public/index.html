@@ -685,12 +685,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const status = document.createElement("p");
             status.textContent = translations[localStorage.getItem("rumbleLanguage") || "ar"].botPresent;
-
+status.dataset.i18n = "botPresent";
             const controlButton = document.createElement("button");
 
 controlButton.className = "server-control-button";
 controlButton.type = "button";
 controlButton.textContent = translations[localStorage.getItem("rumbleLanguage") || "ar"].controlPanel;
+  controlButton.dataset.i18n = "controlPanel";        
 controlButton.addEventListener("click", () => {
     window.location.href =
         `/server.html?guild=${encodeURIComponent(guild.id)}`;
