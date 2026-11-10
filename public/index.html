@@ -334,34 +334,43 @@ RUMBLE <span>SYSTEM</span>
 </div>
 
 <script>
-async function checkDiscordLogin() {
-    try {
-        const response = await fetch("/api/me");
-        const data = await response.json();
-
-        const loginButton = document.getElementById("discordLogin");
-
-        if (!loginButton) return;
-
-        if (data.loggedIn && data.user) {
-            loginButton.textContent =
-                "مرحباً " + (data.user.global_name || data.user.username);
-        }
-    } catch (error) {
-        console.error("Login check failed:", error);
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const loginButton = document.getElementById("discordLogin");
 
-    if (loginButton) {
-        loginButton.onclick = () => {
-            window.location.href = "/auth/discord";
-        };
-    }
+    if (!loginButton) return;
 
-    checkDiscordLogin();
+    loginButton.disabled = true;
+
+    try {
+        const response = await fetch("/api/me", {
+            credentials: "same-origin",
+            cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        if (data.loggedIn && data.user) {
+            const name = data.user.global_name || data.user.username;
+
+            loginButton.textContent = "مرحباً " + name;
+
+            loginButton.onclick = null;
+            loginButton.disabled = true;
+            loginButton.style.cursor = "default";
+            loginButton.style.opacity = "1";
+        } else {
+            loginButton.textContent = "🎮 Login with Discord";
+            loginButton.disabled = false;
+
+            loginButton.onclick = () => {
+                window.location.href = "/auth/discord";
+            };
+        }
+    } catch (error) {
+        console.error("Discord login error:", error);
+        loginButton.textContent = "تعذر تحميل الحساب";
+        loginButton.disabled = false;
+    }
 });
 </script>
 
