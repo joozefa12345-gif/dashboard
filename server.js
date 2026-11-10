@@ -5,7 +5,7 @@ const app = express();
 
 app.set("trust proxy", 1);
 app.use(express.json());
-
+app.use(express.static("public"));
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
