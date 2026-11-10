@@ -226,7 +226,118 @@ app.get("/api/me", (req, res) => {
         user: session?.user || null
     });
 });
+app.get("/api/guilds", async (req, res) => {
+    try {
+        const session = readCookie(req);
 
+        if (!session?.user || !session.accessToken) {
+            return res.status(401).json({
+                error: "Please login again."
+            });
+        }
+
+        if (!process.env.DISCORD_BOT_TOKEN) {
+            return res.status(500).json({
+                error: "Bot token is not configured."
+            });
+        }
+
+        let accessToken = decryptToken(session.accessToken);
+
+        if (session.tokenExpiresAt <= Date.now() + 60000) {
+            const refreshToken = decryptToken(session.refreshToken);
+
+            const refreshResponse = await fetch(
+                "https://discord.com/api/oauth2/token",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({
+                        client_id: CLIENT_ID,
+                        client_secret: CLIENT_SECRET,
+                        grant_type: "refresh_token",
+                        refresh_token: refreshToken
+                    })
+                }
+            );
+
+            const refreshed = await refreshResponse.json();
+
+            if (!refreshResponse.ok) {
+                return res.status(401).json({
+                    error: "Please login again."
+                });
+            }
+
+            accessToken = refreshed.access_token;
+
+            session.accessToken = encryptToken(refreshed.access_token);
+            session.refreshToken = encryptToken(refreshed.refresh_token);
+            session.tokenExpiresAt =
+                Date.now() + refreshed.expires_in * 1000;
+
+            setSessionCookie(res, session);
+        }
+
+        const userResponse = await fetch(
+            "https://discord.com/api/users/@me/guilds",
+            {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                }
+            }
+        );
+
+        if (!userResponse.ok) {
+            return res.status(401).json({
+                error: "Could not load your servers."
+            });
+        }
+
+        const userGuilds = await userResponse.json();
+        const botToken = process.env.DISCORD_BOT_TOKEN;
+        const result = [];
+
+        for (const guild of userGuilds) {
+            const permissions = BigInt(guild.permissions || "0");
+            const canManage =
+    guild.owner ||
+    (permissions & 0x20n) === 0x20n ||
+    (permissions & 0x8n) === 0x8n;0x20n;
+
+            if (!canManage) continue;
+
+            const botResponse = await fetch(
+                `https://discord.com/api/guilds/${guild.id}`,
+                {
+                    headers: {
+                        Authorization: `Bot ${botToken}`
+                    }
+                }
+            );
+
+            if (botResponse.ok) {
+                result.push({
+                    id: guild.id,
+                    name: guild.name,
+                    icon: guild.icon,
+                    owner: guild.owner
+                });
+            }
+        }
+
+        res.json({ guilds: result });
+
+    } catch (error) {
+        console.error("Guilds API error:", error);
+
+        res.status(500).json({
+            error: "Could not load servers."
+        });
+    }
+});
 app.post("/api/logout", (req, res) => {
     clearSessionCookie(res);
     res.json({ success: true });
