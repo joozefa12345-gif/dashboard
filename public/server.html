@@ -122,9 +122,7 @@
 <header>
     <h1>💙 Rumble System</h1>
 
-    <p id="serverPageTitle">
-        لوحة التحكم الخاصة بالسيرفر
-    </p>
+    <p id="serverPageTitle"></p>
 
     <select id="serverLanguage" aria-label="Language">
         <option value="ar">🇪🇬 العربية</option>
@@ -136,9 +134,7 @@
 </header>
 
 <main>
-    <div class="server-panel" id="serverPanel">
-        <p id="loadingMessage">جارٍ التحقق من السيرفر...</p>
-    </div>
+    <div class="server-panel" id="serverPanel"></div>
 </main>
 
 <script>
@@ -222,6 +218,9 @@ const serverTranslations = {
 
 };
 
+
+// اللغة المحفوظة
+
 let serverLanguage = localStorage.getItem("rumbleLanguage") || "ar";
 
 if (!serverTranslations[serverLanguage]) {
@@ -229,6 +228,16 @@ if (!serverTranslations[serverLanguage]) {
 }
 
 let serverText = serverTranslations[serverLanguage];
+
+
+// حالة الصفحة
+
+let currentGuild = null;
+let currentError = null;
+let isLoading = true;
+
+
+// تطبيق اللغة
 
 function applyServerLanguage(lang) {
 
@@ -249,44 +258,195 @@ function applyServerLanguage(lang) {
     document.getElementById("serverPageTitle").textContent =
         serverText.pageTitle;
 
-    document.getElementById("loadingMessage").textContent =
-        serverText.loading;
+    document.getElementById("serverLanguage").value = lang;
+
+    renderServerPage();
 }
+
+
+// زر الرجوع
+
+function createBackButton() {
+
+    const back = document.createElement("a");
+
+    back.className = "back-button";
+    back.href = "/";
+    back.textContent = serverText.back;
+
+    return back;
+}
+
+
+// عرض رسالة الخطأ
+
+function renderError(panel, message, hint = null) {
+
+    const heading = document.createElement("h2");
+
+    heading.className = "error";
+    heading.textContent = message;
+
+    const elements = [heading];
+
+    if (hint) {
+
+        const description = document.createElement("p");
+
+        description.textContent = hint;
+
+        elements.push(description);
+    }
+
+    elements.push(createBackButton());
+
+    panel.replaceChildren(...elements);
+}
+
+
+// إعادة بناء محتويات الصفحة حسب اللغة
+
+function renderServerPage() {
+
+    const panel = document.getElementById("serverPanel");
+
+    if (isLoading) {
+
+        const loading = document.createElement("p");
+
+        loading.textContent = serverText.loading;
+
+        panel.replaceChildren(loading);
+
+        return;
+    }
+
+    if (currentError) {
+
+        if (currentError === "noAccess") {
+
+            renderError(
+                panel,
+                serverText.noAccess,
+                serverText.membershipHint
+            );
+
+        } else {
+
+            renderError(panel, serverText[currentError]);
+        }
+
+        return;
+    }
+
+    if (!currentGuild) {
+        return;
+    }
+
+    const elements = [];
+
+    // أيقونة السيرفر
+
+    const icon = document.createElement("img");
+
+    icon.className = "server-icon";
+    icon.alt = serverText.iconAlt;
+
+    if (currentGuild.icon) {
+
+        icon.src =
+            `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png?size=128`;
+
+    } else {
+
+        icon.style.display = "none";
+    }
+
+    elements.push(icon);
+
+
+    // اسم السيرفر
+
+    const title = document.createElement("h2");
+
+    title.textContent = currentGuild.name;
+
+    elements.push(title);
+
+
+    // حالة التحقق
+
+    const status = document.createElement("p");
+
+    status.className = "status";
+    status.textContent = serverText.verified;
+
+    elements.push(status);
+
+
+    // قسم الإعدادات
+
+    const section = document.createElement("div");
+
+    section.className = "coming-soon";
+
+    const heading = document.createElement("h3");
+
+    heading.textContent = serverText.settings;
+
+    const description = document.createElement("p");
+
+    description.textContent = serverText.description;
+
+    section.append(heading, description);
+
+    elements.push(section);
+
+
+    // زر العودة
+
+    elements.push(createBackButton());
+
+    panel.replaceChildren(...elements);
+}
+
+
+// تشغيل الصفحة
 
 document.addEventListener("DOMContentLoaded", async () => {
 
     const panel = document.getElementById("serverPanel");
     const selector = document.getElementById("serverLanguage");
 
+
+    // تطبيق اللغة المحفوظة
+
     applyServerLanguage(serverLanguage);
 
-    selector.value = serverLanguage;
+
+    // تغيير اللغة دون إعادة تحميل الصفحة
 
     selector.addEventListener("change", event => {
-    applyServerLanguage(event.target.value);
-    location.reload();
-});
 
-    function showError(message) {
+        applyServerLanguage(event.target.value);
 
-        const heading = document.createElement("h2");
+    });
 
-        heading.className = "error";
-        heading.textContent = message;
 
-        panel.replaceChildren(heading);
-    }
+    // استقبال تغيير اللغة من تبويب آخر
 
-    function createBackButton() {
+    window.addEventListener("storage", event => {
 
-        const back = document.createElement("a");
+        if (event.key === "rumbleLanguage" && event.newValue) {
 
-        back.className = "back-button";
-        back.href = "/";
-        back.textContent = serverText.back;
+            applyServerLanguage(event.newValue);
 
-        return back;
-    }
+        }
+
+    });
+
+
+    // التحقق من رابط السيرفر
 
     const params = new URLSearchParams(window.location.search);
 
@@ -294,108 +454,79 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!guildId || !/^\d{17,20}$/.test(guildId)) {
 
-        showError(serverText.invalid);
+        isLoading = false;
+        currentError = "invalid";
+
+        renderServerPage();
 
         return;
     }
 
+
+    // جلب السيرفرات المسموح بها
+
     try {
 
         const response = await fetch("/api/guilds", {
+
             credentials: "same-origin",
             cache: "no-store"
+
         });
+
 
         if (response.status === 401) {
 
-            showError(serverText.login);
+            isLoading = false;
+            currentError = "login";
+
+            renderServerPage();
 
             return;
         }
 
+
         if (!response.ok) {
 
             throw new Error("Guild verification failed");
+
         }
+
 
         const data = await response.json();
 
         const guild = data.guilds.find(item => item.id === guildId);
 
+
         if (!guild) {
 
-            const heading = document.createElement("h2");
+            isLoading = false;
+            currentError = "noAccess";
 
-            heading.className = "error";
-            heading.textContent = serverText.noAccess;
-
-            const description = document.createElement("p");
-
-            description.textContent = serverText.membershipHint;
-
-            panel.replaceChildren(
-                heading,
-                description,
-                createBackButton()
-            );
+            renderServerPage();
 
             return;
         }
 
-        const icon = document.createElement("img");
 
-        icon.className = "server-icon";
-        icon.alt = serverText.iconAlt;
+        // حفظ بيانات السيرفر
 
-        if (guild.icon) {
+        currentGuild = guild;
 
-            icon.src =
-                `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+        isLoading = false;
 
-        } else {
+        renderServerPage();
 
-            icon.style.display = "none";
-        }
-
-        const title = document.createElement("h2");
-
-        title.textContent = guild.name;
-
-        const status = document.createElement("p");
-
-        status.className = "status";
-        status.textContent = serverText.verified;
-
-        const section = document.createElement("div");
-
-        section.className = "coming-soon";
-
-        const heading = document.createElement("h3");
-
-        heading.textContent = serverText.settings;
-
-        const description = document.createElement("p");
-
-        description.textContent = serverText.description;
-
-        section.append(
-            heading,
-            description
-        );
-
-        panel.replaceChildren(
-            icon,
-            title,
-            status,
-            section,
-            createBackButton()
-        );
 
     } catch (error) {
 
         console.error(error);
 
-        showError(serverText.error);
+        isLoading = false;
+        currentError = "error";
+
+        renderServerPage();
+
     }
 
 });
