@@ -485,4 +485,250 @@ remove.textContent=t("remove");
 remove.onclick=()=>{box.remove();safePreview()};
 
 input.addEventListener("input",safePreview);
-textarea.addEventListener("input",saf
+textarea.addEventListener("input",safePreview);
+
+box.append(input,textarea,remove);
+$("fieldsContainer").appendChild(box);
+}
+
+function resetEditor(){
+editingId=null;
+$("embedName").value="";
+$("embedTitle").value="";
+$("embedDescription").value="";
+$("embedColor").value="#258cff";
+$("embedFooter").value="";
+$("imageUrl").value="";
+$("thumbnailUrl").value="";
+$("embedImage").value="";
+$("embedThumbnail").value="";
+$("fieldsContainer").replaceChildren();
+
+temporaryImage="";
+temporaryThumbnail="";
+clearStatus("editorStatus");
+safePreview();
+}
+
+function loadIntoEditor(item){
+editingId=String(item.id);
+const embed=item.embed_data || {};
+
+$("embedName").value=item.embed_name || "";
+$("embedTitle").value=embed.title || "";
+$("embedDescription").value=embed.description || "";
+$("embedColor").value=intToHex(embed.color);
+$("embedFooter").value=embed.footer?.text || "";
+$("imageUrl").value=embed.image?.url || "";
+$("thumbnailUrl").value=embed.thumbnail?.url || "";
+
+$("fieldsContainer").replaceChildren();
+(embed.fields || []).forEach(field=>addField(field.name,field.value));
+
+temporaryImage="";
+temporaryThumbnail="";
+$("embedImage").value="";
+$("embedThumbnail").value="";
+
+$("saveButton").textContent=t("edit");
+clearStatus("editorStatus");
+safePreview();
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function loadSaved(){
+if(!guildId){
+showStatus("savedList",t("noGuild"));
+return;
+}
+
+showStatus("savedList",t("loading"));
+
+try{
+const data=await api(`/api/guilds/${encodeURIComponent(guildId)}/embeds`);
+savedEmbeds=data.embeds || [];
+renderSaved();
+}catch(error){
+showStatus("savedList",error.message);
+}
+}
+
+function renderSaved(){
+if(!savedEmbeds.length){
+$("savedList").textContent=t("empty");
+return;
+}
+
+$("savedList").replaceChildren();
+
+savedEmbeds.forEach(item=>{
+const box=document.createElement("div");
+box.className="field-box";
+
+const name=document.createElement("strong");
+name.textContent=item.embed_name || "Untitled Embed";
+
+const edit=document.createElement("button");
+edit.textContent="✏️ "+t("edit");
+edit.onclick=()=>loadIntoEditor(item);
+
+const del=document.createElement("button");
+del.className="danger";
+del.textContent="🗑️ "+t("delete");
+del.onclick=()=>deleteEmbed(item.id);
+
+box.append(name,edit,del);
+$("savedList").appendChild(box);
+});
+}
+
+async function saveEmbed(){
+if(!guildId)throw new Error(t("noGuild"));
+
+const name=$("embedName").value.trim() || "Untitled Embed";
+const embed=collectEmbed();
+
+const url=editingId
+? `/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}`
+: `/api/guilds/${encodeURIComponent(guildId)}/embeds`;
+
+const data=await api(url,{
+method:editingId?"PUT":"POST",
+body:JSON.stringify({name,embed})
+});
+
+editingId=String(data.embed.id);
+showStatus("editorStatus",t("savedOk"));
+await loadSaved();
+}
+
+async function deleteEmbed(id){
+if(!confirm(t("confirmDelete")))return;
+
+try{
+await api(`/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(id)}`,{
+method:"DELETE"
+});
+
+if(editingId===String(id))resetEditor();
+
+await loadSaved();
+showStatus("editorStatus",t("deletedOk"));
+}catch(error){
+showStatus("editorStatus",error.message);
+}
+}
+
+async function loadChannels(){
+if(!guildId)return;
+
+try{
+const data=await api(`/api/guilds/${encodeURIComponent(guildId)}/channels`);
+$("channelSelect").replaceChildren();
+
+(data.channels || []).forEach(channel=>{
+const option=document.createElement("option");
+option.value=channel.id;
+option.textContent="# "+channel.name;
+$("channelSelect").appendChild(option);
+});
+}catch(error){
+$("channelSelect").textContent=error.message;
+}
+}
+
+async function sendEmbed(){
+if(!editingId)throw new Error(t("saveFirst"));
+
+const channelId=$("channelSelect").value;
+if(!channelId)throw new Error(t("chooseChannel"));
+
+await api(`/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}/send`,{
+method:"POST",
+body:JSON.stringify({channelId})
+});
+
+showStatus("sendStatus",t("sentOk"));
+}
+
+$("addField").addEventListener("click",()=>{
+if(document.querySelectorAll("#fieldsContainer .field-box").length>=25)return;
+addField();
+safePreview();
+});
+
+document.querySelectorAll(
+"#embedTitle,#embedDescription,#embedColor,#embedFooter,#imageUrl,#thumbnailUrl"
+).forEach(input=>input.addEventListener("input",safePreview));
+
+$("embedImage").addEventListener("change",event=>{
+const file=event.target.files[0];
+if(!file)return;
+if(!file.type.startsWith("image/")){
+alert(t("invalidImage"));
+return;
+}
+temporaryImage=URL.createObjectURL(file);
+safePreview();
+});
+
+$("embedThumbnail").addEventListener("change",event=>{
+const file=event.target.files[0];
+if(!file)return;
+if(!file.type.startsWith("image/")){
+alert(t("invalidImage"));
+return;
+}
+temporaryThumbnail=URL.createObjectURL(file);
+safePreview();
+});
+
+$("saveButton").addEventListener("click",async()=>{
+try{
+await saveEmbed();
+}catch(error){
+showStatus("editorStatus",error.message);
+}
+});
+
+$("newButton").addEventListener("click",()=>{
+resetEditor();
+showStatus("editorStatus",t("newReady"));
+});
+
+$("refreshButton").addEventListener("click",()=>{
+loadSaved();
+loadChannels();
+});
+
+$("sendButton").addEventListener("click",async()=>{
+try{
+await sendEmbed();
+}catch(error){
+showStatus("sendStatus",error.message);
+}
+});
+
+$("language").addEventListener("change",event=>{
+applyLanguage(event.target.value);
+});
+
+window.addEventListener("storage",event=>{
+if(event.key==="rumbleLanguage" && translations[event.newValue]){
+applyLanguage(event.newValue);
+}
+});
+
+applyLanguage(currentLanguage);
+resetEditor();
+
+if(guildId){
+loadSaved();
+loadChannels();
+}else{
+showStatus("savedList",t("noGuild"));
+}
+</script>
+
+</body>
+</html>
