@@ -684,14 +684,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             name.textContent = guild.name;
 
             const status = document.createElement("p");
-            status.textContent = "✅ البوت موجود في هذا السيرفر";
+            status.textContent = translations[localStorage.getItem("rumbleLanguage") || "ar"].botPresent;
 
             const controlButton = document.createElement("button");
 
 controlButton.className = "server-control-button";
 controlButton.type = "button";
-controlButton.textContent = "⚙️ لوحة التحكم";
-
+controlButton.textContent = translations[localStorage.getItem("rumbleLanguage") || "ar"].controlPanel;
 controlButton.addEventListener("click", () => {
     window.location.href =
         `/server.html?guild=${encodeURIComponent(guild.id)}`;
@@ -730,7 +729,9 @@ const translations = {
       aboutTitle: "💙 عن Rumble System",
 aboutDescription: "نظام احترافي لإدارة ومتابعة خدمات Discord. نسعى لتقديم تجربة سهلة وسريعة وآمنة.",
       serversTitle: "🖥️ سيرفراتي",
-serversLoading: "جارٍ تحميل السيرفرات المشتركة مع Rumble System..."
+serversLoading: "جارٍ تحميل السيرفرات المشتركة مع Rumble System...",
+      botPresent: "✅ البوت موجود في هذا السيرفر",
+      controlPanel: "⚙️ لوحة التحكم"
 },
 
     en: {
@@ -753,7 +754,9 @@ developmentBadge: "Interface Under Development",
       aboutTitle: "💙 About Rumble System",
 aboutDescription: "A professional system for managing and monitoring Discord services. We strive to provide an easy, fast, and secure experience.",
       serversTitle: "🖥️ My Servers",
-serversLoading: "Loading servers connected to Rumble System..."
+serversLoading: "Loading servers connected to Rumble System...",
+      botPresent: "✅ The bot is present on this server",
+      controlPanel: "⚙️ Control Panel"
     },
 
     fr: {
@@ -776,7 +779,9 @@ developmentBadge: "Interface en développement",
       aboutTitle: "💙 À propos de Rumble System",
 aboutDescription: "Un système professionnel pour gérer et surveiller les services Discord. Nous nous efforçons d’offrir une expérience simple, rapide et sécurisée.",
 serversTitle: "🖥️ Mes serveurs",
-serversLoading: "Chargement des serveurs connectés à Rumble System..."      
+serversLoading: "Chargement des serveurs connectés à Rumble System...",
+      botPresent: "✅ Le bot est présent sur ce serveur",
+      controlPanel: "⚙️ Panneau de contrôle"
     },
 
     de: {
@@ -799,7 +804,9 @@ developmentBadge: "Oberfläche in Entwicklung",
       aboutTitle: "💙 Über Rumble System",
 aboutDescription: "Ein professionelles System zur Verwaltung und Überwachung von Discord-Diensten. Wir möchten eine einfache, schnelle und sichere Nutzung ermöglichen.",
       serversTitle: "🖥️ Meine Server",
-serversLoading: "Server werden geladen, die mit Rumble System verbunden sind..."
+serversLoading: "Server werden geladen, die mit Rumble System verbunden sind...",
+      botPresent: "✅ Der Bot ist auf diesem Server vorhanden",
+      controlPanel: "⚙️ Systemsteuerung"
     },
 
     es: {
@@ -822,7 +829,9 @@ developmentBadge: "Interfaz en desarrollo",
       aboutTitle: "💙 Acerca de Rumble System",
 aboutDescription: "Un sistema profesional para gestionar y supervisar los servicios de Discord. Nos esforzamos por ofrecer una experiencia fácil, rápida y segura.",
       serversTitle: "🖥️ Mis servidores",
-serversLoading: "Cargando los servidores conectados a Rumble System..."
+serversLoading: "Cargando los servidores conectados a Rumble System...",
+      botPresent: "✅ El bot está presente en este servidor",
+      controlPanel: "⚙️ Panel de control"
     }
   };
 
