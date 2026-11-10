@@ -276,6 +276,54 @@ footer {
   color: white;
   cursor: pointer;
 }
+  .profile-card {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 380px;
+    background: #101a2b;
+    border: 1px solid #258cff;
+    border-radius: 18px;
+    padding: 25px;
+    text-align: center;
+    z-index: 10000;
+    box-shadow: 0 10px 40px rgba(0,0,0,.7);
+    color: white;
+}
+
+.profile-card.show {
+    display: block;
+}
+
+.profile-card img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid #258cff;
+    object-fit: cover;
+}
+
+.profile-card h2 {
+    margin: 12px 0 5px;
+}
+
+.profile-card p {
+    color: #b8c7dc;
+    overflow-wrap: anywhere;
+}
+
+.profile-card button {
+    margin-top: 15px;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 9px;
+    background: #258cff;
+    color: white;
+    cursor: pointer;
+}
 </style>
 </head>
 
@@ -423,7 +471,30 @@ const accountUsername = document.getElementById("accountUsername");
 const logoutButton = document.getElementById("logoutButton");
 
 accountUsername.textContent = "@" + user.username;
+const profileButton = document.getElementById("profileButton");
+const profileCard = document.getElementById("profileCard");
+const closeProfile = document.getElementById("closeProfile");
 
+profileButton.onclick = () => {
+    document.getElementById("profileAvatar").src = avatar.src;
+    document.getElementById("profileName").textContent = name;
+    document.getElementById("profileUsername").textContent = "@" + user.username;
+    document.getElementById("profileId").textContent = "Discord ID: " + user.id;
+
+    const created = new Date(
+        Number((BigInt(user.id) >> 22n) + 1420070400000n)
+    );
+
+    document.getElementById("profileCreated").textContent =
+        "تاريخ إنشاء الحساب: " + created.toLocaleDateString("ar-EG");
+
+    accountMenu.classList.remove("show");
+    profileCard.classList.add("show");
+};
+
+closeProfile.onclick = () => {
+    profileCard.classList.remove("show");
+};
 loginButton.onclick = (event) => {
     event.stopPropagation();
     accountMenu.classList.toggle("show");
@@ -462,7 +533,23 @@ logoutButton.onclick = async () => {
 </script>
 <div class="account-menu" id="accountMenu">
     <div id="accountUsername"></div>
+  <button id="profileButton" type="button" style="background:#258cff">
+    👤 الملف الشخصي
+  </button>
     <button id="logoutButton" type="button">تسجيل الخروج</button>
 </div>
+  <div class="profile-card" id="profileCard">
+    <img id="profileAvatar" src="" alt="صورة الحساب">
+
+    <h2 id="profileName">اسم الحساب</h2>
+
+    <p id="profileUsername"></p>
+
+    <p id="profileId"></p>
+
+    <p id="profileCreated"></p>
+
+    <button id="closeProfile" type="button">إغلاق</button>
+  </div>
 </body>
 </html>
