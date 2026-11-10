@@ -367,6 +367,24 @@ footer {
     color: #64b5ff;
     font-size: 13px;
 }
+  .server-control-button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    background: linear-gradient(135deg, #258cff, #0755b8);
+    border: 1px solid #58adff;
+    border-radius: 10px;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.server-control-button:hover {
+    box-shadow: 0 0 18px rgba(37, 140, 255, 0.6);
+    transform: translateY(-2px);
+}
 </style>
 </head>
 
@@ -655,7 +673,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             const status = document.createElement("p");
             status.textContent = "✅ البوت موجود في هذا السيرفر";
 
-            card.append(icon, name, status);
+            const controlButton = document.createElement("button");
+
+controlButton.className = "server-control-button";
+controlButton.type = "button";
+controlButton.textContent = "⚙️ لوحة التحكم";
+
+controlButton.addEventListener("click", () => {
+    window.location.href =
+        `/server.html?guild=${encodeURIComponent(guild.id)}`;
+});
+
+card.append(icon, name, status, controlButton);
             guildList.appendChild(card);
         });
 
