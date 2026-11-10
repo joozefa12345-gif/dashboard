@@ -85,6 +85,29 @@
             color: #258cff;
         }
 
+        .embed-button {
+            display: block;
+            max-width: 350px;
+            width: 100%;
+            margin: 22px auto 0;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #258cff, #0755b8);
+            border: 1px solid #58adff;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .3s ease;
+        }
+
+        .embed-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 22px rgba(37,140,255,.5);
+        }
+
         .back-button {
             display: inline-block;
             margin-top: 25px;
@@ -146,7 +169,8 @@ const serverTranslations = {
         loading: "جارٍ التحقق من السيرفر...",
         verified: "● تم التحقق من السيرفر بنجاح",
         settings: "⚙️ إعدادات السيرفر",
-        description: "لوحة التحكم الخاصة بهذا السيرفر قيد التطوير.",
+        description: "اختر الأداة التي تريد استخدامها في هذا السيرفر.",
+        embedStudio: "🎨 فتح منشئ الـ Embed",
         back: "العودة إلى الداشبورد",
         login: "يرجى تسجيل الدخول أولاً.",
         noAccess: "ليس لديك صلاحية الوصول إلى هذا السيرفر.",
@@ -161,7 +185,8 @@ const serverTranslations = {
         loading: "Verifying server...",
         verified: "● Server verified successfully",
         settings: "⚙️ Server Settings",
-        description: "The control panel for this server is under development.",
+        description: "Choose the tool you want to use on this server.",
+        embedStudio: "🎨 Open Embed Studio",
         back: "Back to Dashboard",
         login: "Please log in first.",
         noAccess: "You do not have permission to access this server.",
@@ -176,7 +201,8 @@ const serverTranslations = {
         loading: "Vérification du serveur...",
         verified: "● Serveur vérifié avec succès",
         settings: "⚙️ Paramètres du serveur",
-        description: "Le panneau de contrôle de ce serveur est en cours de développement.",
+        description: "Choisissez l’outil que vous souhaitez utiliser sur ce serveur.",
+        embedStudio: "🎨 Ouvrir Embed Studio",
         back: "Retour au tableau de bord",
         login: "Veuillez d’abord vous connecter.",
         noAccess: "Vous n’avez pas accès à ce serveur.",
@@ -191,7 +217,8 @@ const serverTranslations = {
         loading: "Server wird überprüft...",
         verified: "● Server erfolgreich überprüft",
         settings: "⚙️ Servereinstellungen",
-        description: "Das Kontrollpanel für diesen Server befindet sich in Entwicklung.",
+        description: "Wähle das Werkzeug aus, das du auf diesem Server verwenden möchtest.",
+        embedStudio: "🎨 Embed Studio öffnen",
         back: "Zurück zum Dashboard",
         login: "Bitte melde dich zuerst an.",
         noAccess: "Du hast keine Berechtigung für diesen Server.",
@@ -206,7 +233,8 @@ const serverTranslations = {
         loading: "Verificando servidor...",
         verified: "● Servidor verificado correctamente",
         settings: "⚙️ Configuración del servidor",
-        description: "El panel de control de este servidor está en desarrollo.",
+        description: "Elige la herramienta que deseas utilizar en este servidor.",
+        embedStudio: "🎨 Abrir Embed Studio",
         back: "Volver al panel principal",
         login: "Inicia sesión primero.",
         noAccess: "No tienes permiso para acceder a este servidor.",
@@ -398,7 +426,24 @@ function renderServerPage() {
 
     description.textContent = serverText.description;
 
-    section.append(heading, description);
+
+    // زر Embed Studio
+
+    const embedButton = document.createElement("a");
+
+    embedButton.className = "embed-button";
+
+    embedButton.href =
+        `/embed.html?guild=${encodeURIComponent(currentGuild.id)}`;
+
+    embedButton.textContent = serverText.embedStudio;
+
+
+    section.append(
+        heading,
+        description,
+        embedButton
+    );
 
     elements.push(section);
 
@@ -415,7 +460,6 @@ function renderServerPage() {
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    const panel = document.getElementById("serverPanel");
     const selector = document.getElementById("serverLanguage");
 
 
