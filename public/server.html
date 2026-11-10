@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rumble System | Server Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #070d18;
+            color: white;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        header {
+            background: #101a2b;
+            border-bottom: 1px solid #258cff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 3px 20px rgba(37,140,255,.15);
+        }
+
+        header h1 {
+            margin: 0;
+            color: #258cff;
+            font-size: 25px;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 45px auto;
+            padding: 20px;
+        }
+
+        .server-panel {
+            background: linear-gradient(145deg, #101a2b, #080f1c);
+            border: 1px solid #258cff;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(37,140,255,.15);
+        }
+
+        .server-icon {
+            width: 110px;
+            height: 110px;
+            border-radius: 25px;
+            border: 3px solid #258cff;
+            object-fit: cover;
+        }
+
+        h2 {
+            color: #64b5ff;
+            overflow-wrap: anywhere;
+        }
+
+        .status {
+            color: #36d98a;
+            margin: 15px 0;
+        }
+
+        .coming-soon {
+            margin-top: 30px;
+            padding: 22px;
+            background: #080f1c;
+            border: 1px solid #24466d;
+            border-radius: 14px;
+        }
+
+        .coming-soon h3 {
+            color: #258cff;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #258cff, #0755b8);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #ff7777;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>💙 Rumble System</h1>
+    <p>لوحة التحكم الخاصة بالسيرفر</p>
+</header>
+
+<main>
+    <div class="server-panel" id="serverPanel">
+        <p>جارٍ التحقق من السيرفر...</p>
+    </div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    const panel = document.getElementById("serverPanel");
+
+    const params = new URLSearchParams(window.location.search);
+    const guildId = params.get("guild");
+
+    if (!guildId || !/^\d{17,20}$/.test(guildId)) {
+        panel.innerHTML = '<h2 class="error">رابط السيرفر غير صالح.</h2>';
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/guilds", {
+            credentials: "same-origin",
+            cache: "no-store"
+        });
+
+        if (response.status === 401) {
+            panel.innerHTML = '<h2 class="error">يرجى تسجيل الدخول أولاً.</h2>';
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("تعذر التحقق من السيرفر");
+        }
+
+        const data = await response.json();
+
+        const guild = data.guilds.find(item => item.id === guildId);
+
+        if (!guild) {
+            panel.innerHTML = `
+                <h2 class="error">ليس لديك صلاحية الوصول إلى هذا السيرفر.</h2>
+                <p>تأكد من أنك عضو في السيرفر وأن البوت موجود فيه.</p>
+                <a class="back-button" href="/">العودة للرئيسية</a>
+            `;
+            return;
+        }
+
+        const icon = document.createElement("img");
+        icon.className = "server-icon";
+        icon.alt = "أيقونة السيرفر";
+
+        if (guild.icon) {
+            icon.src =
+                `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+        } else {
+            icon.style.display = "none";
+        }
+
+        const title = document.createElement("h2");
+        title.textContent = guild.name;
+
+        const status = document.createElement("p");
+        status.className = "status";
+        status.textContent = "● تم التحقق من السيرفر بنجاح";
+
+        const section = document.createElement("div");
+        section.className = "coming-soon";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "⚙️ إعدادات السيرفر";
+
+        const description = document.createElement("p");
+        description.textContent =
+            "لوحة التحكم الخاصة بهذا السيرفر قيد التطوير.";
+
+        section.append(heading, description);
+
+        const back = document.createElement("a");
+        back.className = "back-button";
+        back.href = "/";
+        back.textContent = "العودة إلى الداشبورد";
+
+        panel.replaceChildren(
+            icon,
+            title,
+            status,
+            section,
+            back
+        );
+
+    } catch (error) {
+        console.error(error);
+        panel.innerHTML =
+            '<h2 class="error">حدث خطأ أثناء تحميل لوحة التحكم.</h2>';
+    }
+});
+</script>
+
+</body>
+</html>
