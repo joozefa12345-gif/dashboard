@@ -248,6 +248,34 @@ footer {
   border: 2px solid rgba(255,255,255,.75);
   flex-shrink: 0;
 }
+  .account-menu {
+  display: none;
+  position: absolute;
+  top: 75px;
+  right: 15px;
+  background: #101a2b;
+  border: 1px solid #258cff;
+  border-radius: 12px;
+  padding: 15px;
+  min-width: 200px;
+  z-index: 9999;
+  box-shadow: 0 5px 20px rgba(0,0,0,.5);
+}
+
+.account-menu.show {
+  display: block;
+}
+
+.account-menu button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #e53935;
+  color: white;
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -386,10 +414,38 @@ document.addEventListener("DOMContentLoaded", async () => {
             greeting.textContent = "مرحباً " + name;
 
             loginButton.append(avatar, greeting);
-            loginButton.disabled = true;
+            loginButton.disabled = false;
             loginButton.style.cursor = "default";
             loginButton.style.opacity = "1";
             loginButton.onclick = null;
+          const accountMenu = document.getElementById("accountMenu");
+const accountUsername = document.getElementById("accountUsername");
+const logoutButton = document.getElementById("logoutButton");
+
+accountUsername.textContent = "@" + user.username;
+
+loginButton.onclick = (event) => {
+    event.stopPropagation();
+    accountMenu.classList.toggle("show");
+};
+
+accountMenu.addEventListener("click", (event) => {
+    event.stopPropagation();
+});
+          document.addEventListener("click", () => {
+    accountMenu.classList.remove("show");
+});
+
+logoutButton.onclick = async () => {
+    if (!confirm("هل أنت متأكد أنك تريد تسجيل الخروج؟")) return;
+
+    await fetch("/api/logout", {
+        method: "POST",
+        credentials: "same-origin"
+    });
+
+    window.location.reload();
+};
         } else {
             loginButton.textContent = "🎮 Login with Discord";
             loginButton.disabled = false;
@@ -404,6 +460,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 </script>
-
+<div class="account-menu" id="accountMenu">
+    <div id="accountUsername"></div>
+    <button id="logoutButton" type="button">تسجيل الخروج</button>
+</div>
 </body>
 </html>
