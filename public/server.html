@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Rumble System | Server Dashboard</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -32,6 +34,10 @@
             margin: 0;
             color: #258cff;
             font-size: 25px;
+        }
+
+        header p {
+            margin: 10px 0;
         }
 
         main {
@@ -90,8 +96,23 @@
             font-weight: bold;
         }
 
+        .back-button:hover {
+            box-shadow: 0 0 18px rgba(37,140,255,.5);
+        }
+
         .error {
             color: #ff7777;
+        }
+
+        #serverLanguage {
+            background: #101a2b;
+            color: white;
+            border: 1px solid #258cff;
+            border-radius: 10px;
+            padding: 10px;
+            font-family: Cairo, sans-serif;
+            margin-top: 10px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -100,40 +121,201 @@
 
 <header>
     <h1>💙 Rumble System</h1>
-    <p>لوحة التحكم الخاصة بالسيرفر</p>
+
+    <p id="serverPageTitle">
+        لوحة التحكم الخاصة بالسيرفر
+    </p>
+
+    <select id="serverLanguage" aria-label="Language">
+        <option value="ar">🇪🇬 العربية</option>
+        <option value="en">🇺🇸 English</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="es">🇪🇸 Español</option>
+    </select>
 </header>
 
 <main>
     <div class="server-panel" id="serverPanel">
-        <p>جارٍ التحقق من السيرفر...</p>
+        <p id="loadingMessage">جارٍ التحقق من السيرفر...</p>
     </div>
 </main>
 
 <script>
+
+const serverTranslations = {
+
+    ar: {
+        pageTitle: "لوحة التحكم الخاصة بالسيرفر",
+        loading: "جارٍ التحقق من السيرفر...",
+        verified: "● تم التحقق من السيرفر بنجاح",
+        settings: "⚙️ إعدادات السيرفر",
+        description: "لوحة التحكم الخاصة بهذا السيرفر قيد التطوير.",
+        back: "العودة إلى الداشبورد",
+        login: "يرجى تسجيل الدخول أولاً.",
+        noAccess: "ليس لديك صلاحية الوصول إلى هذا السيرفر.",
+        membershipHint: "تأكد من أنك عضو في السيرفر وأن البوت موجود فيه.",
+        invalid: "رابط السيرفر غير صالح.",
+        error: "حدث خطأ أثناء تحميل لوحة التحكم.",
+        iconAlt: "أيقونة السيرفر"
+    },
+
+    en: {
+        pageTitle: "Server Dashboard",
+        loading: "Verifying server...",
+        verified: "● Server verified successfully",
+        settings: "⚙️ Server Settings",
+        description: "The control panel for this server is under development.",
+        back: "Back to Dashboard",
+        login: "Please log in first.",
+        noAccess: "You do not have permission to access this server.",
+        membershipHint: "Make sure you are a server member and the bot is present.",
+        invalid: "Invalid server link.",
+        error: "An error occurred while loading the dashboard.",
+        iconAlt: "Server icon"
+    },
+
+    fr: {
+        pageTitle: "Tableau de bord du serveur",
+        loading: "Vérification du serveur...",
+        verified: "● Serveur vérifié avec succès",
+        settings: "⚙️ Paramètres du serveur",
+        description: "Le panneau de contrôle de ce serveur est en cours de développement.",
+        back: "Retour au tableau de bord",
+        login: "Veuillez d’abord vous connecter.",
+        noAccess: "Vous n’avez pas accès à ce serveur.",
+        membershipHint: "Vérifiez que vous êtes membre du serveur et que le bot y est présent.",
+        invalid: "Lien du serveur invalide.",
+        error: "Une erreur est survenue lors du chargement du tableau de bord.",
+        iconAlt: "Icône du serveur"
+    },
+
+    de: {
+        pageTitle: "Server-Dashboard",
+        loading: "Server wird überprüft...",
+        verified: "● Server erfolgreich überprüft",
+        settings: "⚙️ Servereinstellungen",
+        description: "Das Kontrollpanel für diesen Server befindet sich in Entwicklung.",
+        back: "Zurück zum Dashboard",
+        login: "Bitte melde dich zuerst an.",
+        noAccess: "Du hast keine Berechtigung für diesen Server.",
+        membershipHint: "Stelle sicher, dass du Mitglied des Servers bist und der Bot vorhanden ist.",
+        invalid: "Ungültiger Serverlink.",
+        error: "Beim Laden des Dashboards ist ein Fehler aufgetreten.",
+        iconAlt: "Serversymbol"
+    },
+
+    es: {
+        pageTitle: "Panel del servidor",
+        loading: "Verificando servidor...",
+        verified: "● Servidor verificado correctamente",
+        settings: "⚙️ Configuración del servidor",
+        description: "El panel de control de este servidor está en desarrollo.",
+        back: "Volver al panel principal",
+        login: "Inicia sesión primero.",
+        noAccess: "No tienes permiso para acceder a este servidor.",
+        membershipHint: "Asegúrate de ser miembro del servidor y de que el bot esté presente.",
+        invalid: "El enlace del servidor no es válido.",
+        error: "Se produjo un error al cargar el panel.",
+        iconAlt: "Icono del servidor"
+    }
+
+};
+
+let serverLanguage = localStorage.getItem("rumbleLanguage") || "ar";
+
+if (!serverTranslations[serverLanguage]) {
+    serverLanguage = "ar";
+}
+
+let serverText = serverTranslations[serverLanguage];
+
+function applyServerLanguage(lang) {
+
+    if (!serverTranslations[lang]) {
+        lang = "ar";
+    }
+
+    serverLanguage = lang;
+    serverText = serverTranslations[lang];
+
+    localStorage.setItem("rumbleLanguage", lang);
+
+    document.documentElement.lang = lang;
+
+    document.documentElement.dir =
+        lang === "ar" ? "rtl" : "ltr";
+
+    document.getElementById("serverPageTitle").textContent =
+        serverText.pageTitle;
+
+    document.getElementById("loadingMessage").textContent =
+        serverText.loading;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+
     const panel = document.getElementById("serverPanel");
+    const selector = document.getElementById("serverLanguage");
+
+    applyServerLanguage(serverLanguage);
+
+    selector.value = serverLanguage;
+
+    selector.addEventListener("change", event => {
+        applyServerLanguage(event.target.value);
+        location.reload();
+    });
+
+    function showError(message) {
+
+        const heading = document.createElement("h2");
+
+        heading.className = "error";
+        heading.textContent = message;
+
+        panel.replaceChildren(heading);
+    }
+
+    function createBackButton() {
+
+        const back = document.createElement("a");
+
+        back.className = "back-button";
+        back.href = "/";
+        back.textContent = serverText.back;
+
+        return back;
+    }
 
     const params = new URLSearchParams(window.location.search);
+
     const guildId = params.get("guild");
 
     if (!guildId || !/^\d{17,20}$/.test(guildId)) {
-        panel.innerHTML = '<h2 class="error">رابط السيرفر غير صالح.</h2>';
+
+        showError(serverText.invalid);
+
         return;
     }
 
     try {
+
         const response = await fetch("/api/guilds", {
             credentials: "same-origin",
             cache: "no-store"
         });
 
         if (response.status === 401) {
-            panel.innerHTML = '<h2 class="error">يرجى تسجيل الدخول أولاً.</h2>';
+
+            showError(serverText.login);
+
             return;
         }
 
         if (!response.ok) {
-            throw new Error("تعذر التحقق من السيرفر");
+
+            throw new Error("Guild verification failed");
         }
 
         const data = await response.json();
@@ -141,63 +323,83 @@ document.addEventListener("DOMContentLoaded", async () => {
         const guild = data.guilds.find(item => item.id === guildId);
 
         if (!guild) {
-            panel.innerHTML = `
-                <h2 class="error">ليس لديك صلاحية الوصول إلى هذا السيرفر.</h2>
-                <p>تأكد من أنك عضو في السيرفر وأن البوت موجود فيه.</p>
-                <a class="back-button" href="/">العودة للرئيسية</a>
-            `;
+
+            const heading = document.createElement("h2");
+
+            heading.className = "error";
+            heading.textContent = serverText.noAccess;
+
+            const description = document.createElement("p");
+
+            description.textContent = serverText.membershipHint;
+
+            panel.replaceChildren(
+                heading,
+                description,
+                createBackButton()
+            );
+
             return;
         }
 
         const icon = document.createElement("img");
+
         icon.className = "server-icon";
-        icon.alt = "أيقونة السيرفر";
+        icon.alt = serverText.iconAlt;
 
         if (guild.icon) {
+
             icon.src =
                 `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`;
+
         } else {
+
             icon.style.display = "none";
         }
 
         const title = document.createElement("h2");
+
         title.textContent = guild.name;
 
         const status = document.createElement("p");
+
         status.className = "status";
-        status.textContent = "● تم التحقق من السيرفر بنجاح";
+        status.textContent = serverText.verified;
 
         const section = document.createElement("div");
+
         section.className = "coming-soon";
 
         const heading = document.createElement("h3");
-        heading.textContent = "⚙️ إعدادات السيرفر";
+
+        heading.textContent = serverText.settings;
 
         const description = document.createElement("p");
-        description.textContent =
-            "لوحة التحكم الخاصة بهذا السيرفر قيد التطوير.";
 
-        section.append(heading, description);
+        description.textContent = serverText.description;
 
-        const back = document.createElement("a");
-        back.className = "back-button";
-        back.href = "/";
-        back.textContent = "العودة إلى الداشبورد";
+        section.append(
+            heading,
+            description
+        );
 
         panel.replaceChildren(
             icon,
             title,
             status,
             section,
-            back
+            createBackButton()
         );
 
     } catch (error) {
+
         console.error(error);
-        panel.innerHTML =
-            '<h2 class="error">حدث خطأ أثناء تحميل لوحة التحكم.</h2>';
+
+        showError(serverText.error);
     }
+
 });
+
 </script>
 
 </body>
