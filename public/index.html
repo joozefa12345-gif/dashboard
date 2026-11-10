@@ -401,11 +401,11 @@ RUMBLE <span>SYSTEM</span>
 <div class="menu-title">القائمة الرئيسية</div>
 
 <nav class="menu">
-<a href="#" class="active">🏠 الرئيسية</a>
-<a href="#statistics">📊 الإحصائيات</a>
-<a href="#bot">🤖 حالة البوت</a>
-<a href="#about">ℹ️ حول النظام</a>
-  <a href="#servers">سيرفراتي</a>
+    <a href="#" class="active" data-i18n="home">🏠 الرئيسية</a>
+    <a href="#statistics" data-i18n="statistics">📊 الإحصائيات</a>
+    <a href="#bot" data-i18n="botStatus">🤖 حالة البوت</a>
+    <a href="#about" data-i18n="about">ℹ️ حول النظام</a>
+    <a href="#servers" data-i18n="servers">🖥️ سيرفراتي</a>
 </nav>
 
 </aside>
@@ -413,10 +413,22 @@ RUMBLE <span>SYSTEM</span>
 <main class="main">
 
 <div class="topbar">
-<h2>لوحة التحكم</h2>
-<button class="login" id="discordLogin" type="button">
-🎮 Login with Discord
-</button>
+    <h2 id="dashboardTitle">لوحة التحكم</h2>
+
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <select id="languageSelector" aria-label="اختيار اللغة"
+            style="background:#101a2b;color:white;border:1px solid #258cff;border-radius:10px;padding:10px;font-family:Cairo;">
+            <option value="ar">🇪🇬 العربية</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="es">🇪🇸 Español</option>
+        </select>
+
+        <button class="login" id="discordLogin" type="button">
+            🎮 Login with Discord
+        </button>
+    </div>
 </div>
 
 <section class="welcome">
@@ -692,6 +704,91 @@ card.append(icon, name, status, controlButton);
         console.error(error);
         message.textContent = "حدث خطأ أثناء تحميل السيرفرات.";
     }
+});
+  </script>
+  <script>
+const translations = {
+    ar: {
+        direction: "rtl",
+        dashboardTitle: "لوحة التحكم",
+        home: "🏠 الرئيسية",
+        statistics: "📊 الإحصائيات",
+        botStatus: "🤖 حالة البوت",
+        about: "ℹ️ حول النظام",
+        servers: "🖥️ سيرفراتي"
+    },
+
+    en: {
+        direction: "ltr",
+        dashboardTitle: "Dashboard",
+        home: "🏠 Home",
+        statistics: "📊 Statistics",
+        botStatus: "🤖 Bot Status",
+        about: "ℹ️ About System",
+        servers: "🖥️ My Servers"
+    },
+
+    fr: {
+        direction: "ltr",
+        dashboardTitle: "Tableau de bord",
+        home: "🏠 Accueil",
+        statistics: "📊 Statistiques",
+        botStatus: "🤖 État du bot",
+        about: "ℹ️ À propos",
+        servers: "🖥️ Mes serveurs"
+    },
+
+    de: {
+        direction: "ltr",
+        dashboardTitle: "Dashboard",
+        home: "🏠 Startseite",
+        statistics: "📊 Statistiken",
+        botStatus: "🤖 Bot-Status",
+        about: "ℹ️ Über das System",
+        servers: "🖥️ Meine Server"
+    },
+
+    es: {
+        direction: "ltr",
+        dashboardTitle: "Panel de control",
+        home: "🏠 Inicio",
+        statistics: "📊 Estadísticas",
+        botStatus: "🤖 Estado del bot",
+        about: "ℹ️ Sobre el sistema",
+        servers: "🖥️ Mis servidores"
+    }
+};
+
+function changeLanguage(lang) {
+    const selected = translations[lang];
+
+    if (!selected) return;
+
+    document.documentElement.lang = lang;
+    document.documentElement.dir = selected.direction;
+
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+        const key = element.dataset.i18n;
+
+        if (selected[key]) {
+            element.textContent = selected[key];
+        }
+    });
+
+    localStorage.setItem("rumbleLanguage", lang);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const selector = document.getElementById("languageSelector");
+
+    const savedLanguage = localStorage.getItem("rumbleLanguage") || "ar";
+
+    selector.value = savedLanguage;
+    changeLanguage(savedLanguage);
+
+    selector.addEventListener("change", () => {
+        changeLanguage(selector.value);
+    });
 });
   </script>
 </body>
