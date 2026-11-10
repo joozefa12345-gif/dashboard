@@ -264,6 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     selector.addEventListener("change", event => {
     applyServerLanguage(event.target.value);
+    location.reload();
 });
 
     function showError(message) {
