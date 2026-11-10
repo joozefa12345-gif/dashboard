@@ -19,7 +19,42 @@ function sign(value) {
         .update(value)
         .digest("base64url");
 }
+function encryptToken(value) {
+    const key = crypto.scryptSync(SESSION_SECRET, "rumble-salt", 32);
+    const iv = crypto.randomBytes(12);
 
+    const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+    const encrypted = Buffer.concat([
+        cipher.update(value, "utf8"),
+        cipher.final()
+    ]);
+
+    const tag = cipher.getAuthTag();
+
+    return [
+        iv.toString("base64url"),
+        tag.toString("base64url"),
+        encrypted.toString("base64url")
+    ].join(".");
+}
+
+function decryptToken(value) {
+    const [iv, tag, encrypted] = value.split(".");
+    const key = crypto.scryptSync(SESSION_SECRET, "rumble-salt", 32);
+
+    const decipher = crypto.createDecipheriv(
+        "aes-256-gcm",
+        key,
+        Buffer.from(iv, "base64url")
+    );
+
+    decipher.setAuthTag(Buffer.from(tag, "base64url"));
+
+    return Buffer.concat([
+        decipher.update(Buffer.from(encrypted, "base64url")),
+        decipher.final()
+    ]).toString("utf8");
+}
 function createCookie(payload) {
     const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
     return data + "." + sign(data);
@@ -169,6 +204,9 @@ app.get("/auth/discord/callback", async (req, res) => {
                 global_name: user.global_name,
                 avatar: user.avatar
             },
+            accessToken: encryptToken(tokens.access_token),
+refreshToken: encryptToken(tokens.refresh_token),
+tokenExpiresAt: Date.now() + (tokens.expires_in || 3600) * 1000,
             expires: Date.now() + 24 * 60 * 60 * 1000
         });
 
