@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Rumble System | Embed Studio</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #070d18;
+    color: white;
+    font-family: Cairo, sans-serif;
+}
+
+header {
+    background: #101a2b;
+    border-bottom: 1px solid #258cff;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 3px 20px rgba(37,140,255,.15);
+}
+
+header h1 {
+    color: #258cff;
+    margin: 0;
+    font-size: 25px;
+}
+
+header p {
+    margin: 8px 0;
+    color: #aaa;
+}
+
+#language {
+    background: #101a2b;
+    color: white;
+    border: 1px solid #258cff;
+    border-radius: 9px;
+    padding: 9px;
+    font-family: Cairo;
+    margin-top: 10px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.panel {
+    background: linear-gradient(145deg,#101a2b,#080f1c);
+    border: 1px solid #24466d;
+    border-radius: 16px;
+    padding: 22px;
+    min-width: 0;
+}
+
+h2 {
+    color: #64b5ff;
+    font-size: 20px;
+    margin-top: 0;
+}
+
+label {
+    display: block;
+    margin: 15px 0 7px;
+    color: #c9dfff;
+    font-weight: bold;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 9px;
+    border: 1px solid #24466d;
+    background: #080f1c;
+    color: white;
+    font-family: Cairo;
+    outline: none;
+}
+
+input:focus, textarea:focus {
+    border-color: #258cff;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+input[type="color"] {
+    height: 48px;
+    padding: 4px;
+    cursor: pointer;
+}
+
+input[type="file"] {
+    font-size: 13px;
+}
+
+button {
+    border: none;
+    border-radius: 9px;
+    padding: 11px 16px;
+    background: linear-gradient(135deg,#258cff,#0755b8);
+    color: white;
+    font-family: Cairo;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 12px;
+}
+
+button:hover {
+    box-shadow: 0 0 15px rgba(37,140,255,.4);
+}
+
+.field-box {
+    background: #080f1c;
+    border: 1px solid #24466d;
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 12px;
+}
+
+.field-box input {
+    margin-bottom: 9px;
+}
+
+.remove-button {
+    background: #a52c42;
+}
+
+.preview-area {
+    background: #313338;
+    border-radius: 12px;
+    padding: 18px;
+    min-height: 300px;
+}
+
+.discord-message {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #258cff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.message-content {
+    min-width: 0;
+    width: 100%;
+}
+
+.username {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.embed {
+    background: #2b2d31;
+    border-left: 5px solid #258cff;
+    border-radius: 5px;
+    padding: 15px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+[dir="rtl"] .embed {
+    border-left: none;
+    border-right: 5px solid #258cff;
+}
+
+.embed h3 {
+    margin: 0 0 10px;
+    color: white;
+}
+
+.embed p {
+    color: #dbdee1;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.embed img {
+    max-width: 100%;
+    border-radius: 7px;
+    margin-top: 12px;
+}
+
+.thumbnail {
+    width: 75px;
+    height: 75px;
+    object-fit: cover;
+    float: right;
+    margin: 0 10px 10px 0;
+}
+
+[dir="ltr"] .thumbnail {
+    float: left;
+}
+
+.embed-field {
+    margin-top: 15px;
+}
+
+.embed-field strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.embed-footer {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 15px;
+}
+
+.back-button {
+    display: inline-block;
+    color: white;
+    text-decoration: none;
+    margin-top: 15px;
+    background: #17375d;
+    padding: 10px 18px;
+    border-radius: 9px;
+}
+
+.note {
+    color: #9db6d1;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+@media(max-width:750px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>💙 Rumble Embed Studio</h1>
+    <p id="subtitle">منشئ رسائل الإيمبد الاحترافي</p>
+
+    <select id="language">
+        <option value="ar">🇪🇬 العربية</option>
+        <option value="en">🇺🇸 English</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="es">🇪🇸 Español</option>
+    </select>
+</header>
+
+<div class="container">
+
+    <section class="panel">
+
+        <h2 id="editorTitle">📝 إنشاء إيمبد جديد</h2>
+
+        <label id="titleLabel">عنوان الإيمبد</label>
+        <input id="embedTitle" maxlength="256" placeholder="اكتب عنوان الإيمبد...">
+
+        <label id="descriptionLabel">وصف الإيمبد</label>
+        <textarea id="embedDescription" maxlength="4096" placeholder="اكتب محتوى الإيمبد هنا..."></textarea>
+
+        <label id="colorLabel">لون الإيمبد</label>
+        <input type="color" id="embedColor" value="#258cff">
+
+        <label id="imageLabel">الصورة الرئيسية</label>
+        <input type="file" id="embedImage" accept="image/*">
+
+        <label id="thumbnailLabel">الصورة المصغرة</label>
+        <input type="file" id="embedThumbnail" accept="image/*">
+
+        <h2 id="fieldsTitle" style="margin-top:25px">📋 حقول الإيمبد</h2>
+
+        <div id="fieldsContainer"></div>
+
+        <button id="addField">➕ إضافة حقل</button>
+
+        <label id="footerLabel">النص السفلي</label>
+        <input id="embedFooter" maxlength="2048" placeholder="Rumble System">
+
+        <p class="note" id="emojiNote">
+            💡 إضافة إيموجيات السيرفر المخصصة واختيار روم الإرسال سيتم تفعيلهما عند ربط الصفحة بالبوت.
+        </p>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2 id="previewTitle">👁️ معاينة الإيمبد</h2>
+
+        <div class="preview-area">
+
+            <div class="discord-message">
+
+                <div class="avatar">💙</div>
+
+                <div class="message-content">
+
+                    <div class="username">Rumble System</div>
+
+                    <div class="embed" id="previewEmbed">
+
+                        <h3 id="previewEmbedTitle"></h3>
+
+                        <p id="previewEmbedDescription"></p>
+
+                        <div id="previewFields"></div>
+
+                        <img id="previewImage" style="display:none">
+
+                        <div id="previewThumbnail"></div>
+
+                        <div class="embed-footer" id="previewFooter"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <a href="#" class="back-button" id="backButton">
+            ← العودة إلى لوحة السيرفر
+        </a>
+
+        <p class="note" id="previewNote">
+            هذه معاينة مباشرة لشكل الإيمبد قبل إرساله.
+        </p>
+
+    </section>
+
+</div>
+
+
+<script>
+
+const translations = {
+
+ar: {
+subtitle:"منشئ رسائل الإيمبد الاحترافي",
+editor:"📝 إنشاء إيمبد جديد",
+title:"عنوان الإيمبد",
+description:"وصف الإيمبد",
+color:"لون الإيمبد",
+image:"الصورة الرئيسية",
+thumbnail:"الصورة المصغرة",
+fields:"📋 حقول الإيمبد",
+add:"➕ إضافة حقل",
+footer:"النص السفلي",
+preview:"👁️ معاينة الإيمبد",
+back:"← العودة إلى لوحة السيرفر",
+note:"💡 إضافة إيموجيات السيرفر المخصصة واختيار روم الإرسال سيتم تفعيلهما عند ربط الصفحة بالبوت.",
+previewNote:"هذه معاينة مباشرة لشكل الإيمبد قبل إرساله.",
+fieldName:"اسم الحقل",
+fieldValue:"محتوى الحقل",
+remove:"حذف الحقل"
+},
+
+en: {
+subtitle:"Professional Embed Builder",
+editor:"📝 Create New Embed",
+title:"Embed Title",
+description:"Embed Description",
+color:"Embed Color",
+image:"Main Image",
+thumbnail:"Thumbnail",
+fields:"📋 Embed Fields",
+add:"➕ Add Field",
+footer:"Footer Text",
+preview:"👁️ Embed Preview",
+back:"← Back to Server Dashboard",
+note:"💡 Custom server emojis and channel selection will be enabled when connected to the bot.",
+previewNote:"Live preview of your embed before sending.",
+fieldName:"Field Name",
+fieldValue:"Field Content",
+remove:"Remove Field"
+},
+
+fr: {
+subtitle:"Créateur professionnel d'Embeds",
+editor:"📝 Créer un nouvel Embed",
+title:"Titre de l'Embed",
+description:"Description de l'Embed",
+color:"Couleur de l'Embed",
+image:"Image principale",
+thumbnail:"Miniature",
+fields:"📋 Champs de l'Embed",
+add:"➕ Ajouter un champ",
+footer:"Texte du pied de page",
+preview:"👁️ Aperçu de l'Embed",
+back:"← Retour au tableau de bord",
+note:"💡 Les émojis personnalisés et le choix du salon seront activés après la connexion au bot.",
+previewNote:"Aperçu en direct de votre Embed avant l'envoi.",
+fieldName:"Nom du champ",
+fieldValue:"Contenu du champ",
+remove:"Supprimer"
+},
+
+de: {
+subtitle:"Professioneller Embed-Editor",
+editor:"📝 Neuen Embed erstellen",
+title:"Embed-Titel",
+description:"Embed-Beschreibung",
+color:"Embed-Farbe",
+image:"Hauptbild",
+thumbnail:"Miniaturbild",
+fields:"📋 Embed-Felder",
+add:"➕ Feld hinzufügen",
+footer:"Fußzeilentext",
+preview:"👁️ Embed-Vorschau",
+back:"← Zurück zum Server-Dashboard",
+note:"💡 Benutzerdefinierte Server-Emojis und Kanalauswahl werden nach der Bot-Verbindung aktiviert.",
+previewNote:"Live-Vorschau deines Embeds vor dem Senden.",
+fieldName:"Feldname",
+fieldValue:"Feldinhalt",
+remove:"Feld entfernen"
+},
+
+es: {
+subtitle:"Creador profesional de Embeds",
+editor:"📝 Crear nuevo Embed",
+title:"Título del Embed",
+description:"Descripción del Embed",
+color:"Color del Embed",
+image:"Imagen principal",
+thumbnail:"Miniatura",
+fields:"📋 Campos del Embed",
+add:"➕ Añadir campo",
+footer:"Texto del pie",
+preview:"👁️ Vista previa del Embed",
+back:"← Volver al panel del servidor",
+note:"💡 Los emojis personalizados y la selección de canales estarán disponibles al conectar el bot.",
+previewNote:"Vista previa en directo de tu Embed antes de enviarlo.",
+fieldName:"Nombre del campo",
+fieldValue:"Contenido del campo",
+remove:"Eliminar campo"
+}
+
+};
+
+
+const guildId = new URLSearchParams(location.search).get("guild");
+
+document.getElementById("backButton").href =
+    guildId ? `/server.html?guild=${encodeURIComponent(guildId)}` : "/";
+
+
+let imageURL = "";
+let thumbnailURL = "";
+
+
+function applyLanguage(lang) {
+
+    const t = translations[lang] || translations.ar;
+
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+
+    localStorage.setItem("rumbleLanguage", lang);
+
+    const ids = {
+        subtitle:"subtitle",
+        editor:"editorTitle",
+        title:"titleLabel",
+        description:"descriptionLabel",
+        color:"colorLabel",
+        image:"imageLabel",
+        thumbnail:"thumbnailLabel",
+        fields:"fieldsTitle",
+        add:"addField",
+        footer:"footerLabel",
+        preview:"previewTitle",
+        back:"backButton",
+        note:"emojiNote",
+        previewNote:"previewNote"
+    };
+
+    Object.keys(ids).forEach(key => {
+        document.getElementById(ids[key]).textContent = t[key];
+    });
+
+    document.querySelectorAll(".field-name").forEach(input => {
+        input.placeholder = t.fieldName;
+    });
+
+    document.querySelectorAll(".field-value").forEach(input => {
+        input.placeholder = t.fieldValue;
+    });
+
+    document.querySelectorAll(".remove-button").forEach(button => {
+        button.textContent = t.remove;
+    });
+
+    document.getElementById("language").value = lang;
+}
+
+
+function updatePreview() {
+
+    const title = document.getElementById("embedTitle").value;
+    const description = document.getElementById("embedDescription").value;
+    const color = document.getElementById("embedColor").value;
+    const footer = document.getElementById("embedFooter").value;
+
+    document.getElementById("previewEmbedTitle").textContent = title;
+    document.getElementById("previewEmbedDescription").textContent = description;
+    document.getElementById("previewFooter").textContent = footer;
+
+    document.getElementById("previewEmbed").style.borderRightColor =
+        document.documentElement.dir === "rtl" ? color : "transparent";
+
+    document.getElementById("previewEmbed").style.borderLeftColor =
+        document.documentElement.dir === "ltr" ? color : "transparent";
+
+    const image = document.getElementById("previewImage");
+
+    image.style.display = imageURL ? "block" : "none";
+    image.src = imageURL;
+
+    const thumbnail = document.getElementById("previewThumbnail");
+
+    thumbnail.replaceChildren();
+
+    if (thumbnailURL) {
+
+        const img = document.createElement("img");
+
+        img.src = thumbnailURL;
+        img.className = "thumbnail";
+
+        thumbnail.appendChild(img);
+    }
+
+    const fields = document.getElementById("previewFields");
+
+    fields.replaceChildren();
+
+    document.querySelectorAll(".field-box").forEach(box => {
+
+        const name = box.querySelector(".field-name").value;
+        const value = box.querySelector(".field-value").value;
+
+        if (!name && !value) return;
+
+        const field = document.createElement("div");
+        field.className = "embed-field";
+
+        const strong = document.createElement("strong");
+        strong.textContent = name;
+
+        const text = document.createElement("span");
+        text.textContent = value;
+
+        field.append(strong, text);
+
+        fields.appendChild(field);
+    });
+
+}
+
+
+function addField() {
+
+    const lang = document.getElementById("language").value;
+    const t = translations[lang];
+
+    const box = document.createElement("div");
+
+    box.className = "field-box";
+
+    const name = document.createElement("input");
+    name.className = "field-name";
+    name.maxLength = 256;
+    name.placeholder = t.fieldName;
+
+    const value = document.createElement("textarea");
+    value.className = "field-value";
+    value.maxLength = 1024;
+    value.placeholder = t.fieldValue;
+
+    const remove = document.createElement("button");
+    remove.className = "remove-button";
+    remove.textContent = t.remove;
+
+    remove.onclick = () => {
+        box.remove();
+        updatePreview();
+    };
+
+    name.addEventListener("input", updatePreview);
+    value.addEventListener("input", updatePreview);
+
+    box.append(name, value, remove);
+
+    document.getElementById("fieldsContainer").appendChild(box);
+
+}
+
+
+document.getElementById("addField").addEventListener("click", addField);
+
+
+document.querySelectorAll(
+    "#embedTitle, #embedDescription, #embedColor, #embedFooter"
+).forEach(input => {
+
+    input.addEventListener("input", updatePreview);
+
+});
+
+
+document.getElementById("embedImage").addEventListener("change", event => {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        alert("Please select an image file.");
+        event.target.value = "";
+        return;
+    }
+
+    if (imageURL) URL.revokeObjectURL(imageURL);
+
+    imageURL = URL.createObjectURL(file);
+
+    updatePreview();
+
+});
+
+
+document.getElementById("embedThumbnail").addEventListener("change", event => {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+        alert("Please select an image file.");
+        event.target.value = "";
+        return;
+    }
+
+    if (thumbnailURL) URL.revokeObjectURL(thumbnailURL);
+
+    thumbnailURL = URL.createObjectURL(file);
+
+    updatePreview();
+
+});
+
+
+document.getElementById("language").addEventListener("change", event => {
+
+    applyLanguage(event.target.value);
+
+});
+
+
+window.addEventListener("storage", event => {
+
+    if (event.key === "rumbleLanguage" && translations[event.newValue]) {
+        applyLanguage(event.newValue);
+    }
+
+});
+
+
+const savedLanguage = localStorage.getItem("rumbleLanguage") || "ar";
+
+applyLanguage(savedLanguage);
+
+updatePreview();
+
+</script>
+
+</body>
+</html>
