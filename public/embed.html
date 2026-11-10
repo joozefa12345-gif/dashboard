@@ -176,6 +176,7 @@ button:hover {
     margin-bottom: 8px;
 }
 
+/* Embed */
 .embed {
     background: #2b2d31;
     border-left: 5px solid #258cff;
@@ -190,9 +191,32 @@ button:hover {
     border-right: 5px solid #258cff;
 }
 
+/* Thumbnail: top right */
+#previewThumbnail {
+    float: right;
+    width: 80px;
+    height: 80px;
+    margin: 0 0 10px 12px;
+}
+
+#previewThumbnail:empty {
+    display: none;
+}
+
+#previewThumbnail img {
+    display: block;
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin: 0;
+}
+
+/* Embed title and description */
 .embed h3 {
     margin: 0 0 10px;
     color: white;
+    overflow-wrap: anywhere;
 }
 
 .embed p {
@@ -201,24 +225,19 @@ button:hover {
     overflow-wrap: anywhere;
 }
 
-.embed img {
+/* Fields start below thumbnail */
+#previewFields {
+    clear: both;
+}
+
+/* Main image */
+#previewImage {
     max-width: 100%;
     border-radius: 7px;
     margin-top: 12px;
 }
 
-.thumbnail {
-    width: 75px;
-    height: 75px;
-    object-fit: cover;
-    float: right;
-    margin: 0 10px 10px 0;
-}
-
-[dir="ltr"] .thumbnail {
-    float: left;
-}
-
+/* Embed fields */
 .embed-field {
     margin-top: 15px;
 }
@@ -234,6 +253,7 @@ button:hover {
     margin-top: 15px;
 }
 
+/* Back button */
 .back-button {
     display: inline-block;
     color: white;
@@ -309,7 +329,6 @@ button:hover {
 
     </section>
 
-
     <section class="panel">
 
         <h2 id="previewTitle">👁️ معاينة الإيمبد</h2>
@@ -326,6 +345,8 @@ button:hover {
 
                     <div class="embed" id="previewEmbed">
 
+                        <div id="previewThumbnail"></div>
+
                         <h3 id="previewEmbedTitle"></h3>
 
                         <p id="previewEmbedDescription"></p>
@@ -333,8 +354,6 @@ button:hover {
                         <div id="previewFields"></div>
 
                         <img id="previewImage" style="display:none">
-
-                        <div id="previewThumbnail"></div>
 
                         <div class="embed-footer" id="previewFooter"></div>
 
@@ -358,7 +377,6 @@ button:hover {
 
 </div>
 
-
 <script>
 
 const translations = {
@@ -380,7 +398,11 @@ note:"💡 إضافة إيموجيات السيرفر المخصصة واختي�
 previewNote:"هذه معاينة مباشرة لشكل الإيمبد قبل إرساله.",
 fieldName:"اسم الحقل",
 fieldValue:"محتوى الحقل",
-remove:"حذف الحقل"
+remove:"حذف الحقل",
+titlePlaceholder:"اكتب عنوان الإيمبد...",
+descriptionPlaceholder:"اكتب محتوى الإيمبد هنا...",
+footerPlaceholder:"Rumble System",
+invalidImage:"من فضلك اختر ملف صورة صحيحًا."
 },
 
 en: {
@@ -400,7 +422,11 @@ note:"💡 Custom server emojis and channel selection will be enabled when conne
 previewNote:"Live preview of your embed before sending.",
 fieldName:"Field Name",
 fieldValue:"Field Content",
-remove:"Remove Field"
+remove:"Remove Field",
+titlePlaceholder:"Enter embed title...",
+descriptionPlaceholder:"Enter embed description...",
+footerPlaceholder:"Rumble System",
+invalidImage:"Please select a valid image file."
 },
 
 fr: {
@@ -420,7 +446,11 @@ note:"💡 Les émojis personnalisés et le choix du salon seront activés aprè
 previewNote:"Aperçu en direct de votre Embed avant l'envoi.",
 fieldName:"Nom du champ",
 fieldValue:"Contenu du champ",
-remove:"Supprimer"
+remove:"Supprimer",
+titlePlaceholder:"Entrez le titre...",
+descriptionPlaceholder:"Entrez la description...",
+footerPlaceholder:"Rumble System",
+invalidImage:"Veuillez sélectionner une image valide."
 },
 
 de: {
@@ -440,7 +470,11 @@ note:"💡 Benutzerdefinierte Server-Emojis und Kanalauswahl werden nach der Bot
 previewNote:"Live-Vorschau deines Embeds vor dem Senden.",
 fieldName:"Feldname",
 fieldValue:"Feldinhalt",
-remove:"Feld entfernen"
+remove:"Feld entfernen",
+titlePlaceholder:"Embed-Titel eingeben...",
+descriptionPlaceholder:"Embed-Beschreibung eingeben...",
+footerPlaceholder:"Rumble System",
+invalidImage:"Bitte wähle eine gültige Bilddatei."
 },
 
 es: {
@@ -460,7 +494,11 @@ note:"💡 Los emojis personalizados y la selección de canales estarán disponi
 previewNote:"Vista previa en directo de tu Embed antes de enviarlo.",
 fieldName:"Nombre del campo",
 fieldValue:"Contenido del campo",
-remove:"Eliminar campo"
+remove:"Eliminar campo",
+titlePlaceholder:"Escribe el título...",
+descriptionPlaceholder:"Escribe la descripción...",
+footerPlaceholder:"Rumble System",
+invalidImage:"Selecciona un archivo de imagen válido."
 }
 
 };
@@ -469,7 +507,9 @@ remove:"Eliminar campo"
 const guildId = new URLSearchParams(location.search).get("guild");
 
 document.getElementById("backButton").href =
-    guildId ? `/server.html?guild=${encodeURIComponent(guildId)}` : "/";
+    guildId
+        ? `/server.html?guild=${encodeURIComponent(guildId)}`
+        : "/";
 
 
 let imageURL = "";
@@ -478,7 +518,11 @@ let thumbnailURL = "";
 
 function applyLanguage(lang) {
 
-    const t = translations[lang] || translations.ar;
+    if (!translations[lang]) {
+        lang = "ar";
+    }
+
+    const t = translations[lang];
 
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
@@ -506,6 +550,15 @@ function applyLanguage(lang) {
         document.getElementById(ids[key]).textContent = t[key];
     });
 
+    document.getElementById("embedTitle").placeholder =
+        t.titlePlaceholder;
+
+    document.getElementById("embedDescription").placeholder =
+        t.descriptionPlaceholder;
+
+    document.getElementById("embedFooter").placeholder =
+        t.footerPlaceholder;
+
     document.querySelectorAll(".field-name").forEach(input => {
         input.placeholder = t.fieldName;
     });
@@ -530,14 +583,23 @@ function updatePreview() {
     const footer = document.getElementById("embedFooter").value;
 
     document.getElementById("previewEmbedTitle").textContent = title;
-    document.getElementById("previewEmbedDescription").textContent = description;
+
+    document.getElementById("previewEmbedDescription").textContent =
+        description;
+
     document.getElementById("previewFooter").textContent = footer;
 
-    document.getElementById("previewEmbed").style.borderRightColor =
-        document.documentElement.dir === "rtl" ? color : "transparent";
+    const embed = document.getElementById("previewEmbed");
 
-    document.getElementById("previewEmbed").style.borderLeftColor =
-        document.documentElement.dir === "ltr" ? color : "transparent";
+    embed.style.borderRightColor =
+        document.documentElement.dir === "rtl"
+            ? color
+            : "transparent";
+
+    embed.style.borderLeftColor =
+        document.documentElement.dir === "ltr"
+            ? color
+            : "transparent";
 
     const image = document.getElementById("previewImage");
 
@@ -553,7 +615,7 @@ function updatePreview() {
         const img = document.createElement("img");
 
         img.src = thumbnailURL;
-        img.className = "thumbnail";
+        img.alt = "Embed Thumbnail";
 
         thumbnail.appendChild(img);
     }
@@ -589,23 +651,26 @@ function updatePreview() {
 function addField() {
 
     const lang = document.getElementById("language").value;
-    const t = translations[lang];
+    const t = translations[lang] || translations.ar;
 
     const box = document.createElement("div");
 
     box.className = "field-box";
 
     const name = document.createElement("input");
+
     name.className = "field-name";
     name.maxLength = 256;
     name.placeholder = t.fieldName;
 
     const value = document.createElement("textarea");
+
     value.className = "field-value";
     value.maxLength = 1024;
     value.placeholder = t.fieldValue;
 
     const remove = document.createElement("button");
+
     remove.className = "remove-button";
     remove.textContent = t.remove;
 
@@ -642,13 +707,19 @@ document.getElementById("embedImage").addEventListener("change", event => {
 
     if (!file) return;
 
+    const lang = document.getElementById("language").value;
+    const t = translations[lang] || translations.ar;
+
     if (!file.type.startsWith("image/")) {
-        alert("Please select an image file.");
+
+        alert(t.invalidImage);
         event.target.value = "";
         return;
     }
 
-    if (imageURL) URL.revokeObjectURL(imageURL);
+    if (imageURL) {
+        URL.revokeObjectURL(imageURL);
+    }
 
     imageURL = URL.createObjectURL(file);
 
@@ -663,13 +734,19 @@ document.getElementById("embedThumbnail").addEventListener("change", event => {
 
     if (!file) return;
 
+    const lang = document.getElementById("language").value;
+    const t = translations[lang] || translations.ar;
+
     if (!file.type.startsWith("image/")) {
-        alert("Please select an image file.");
+
+        alert(t.invalidImage);
         event.target.value = "";
         return;
     }
 
-    if (thumbnailURL) URL.revokeObjectURL(thumbnailURL);
+    if (thumbnailURL) {
+        URL.revokeObjectURL(thumbnailURL);
+    }
 
     thumbnailURL = URL.createObjectURL(file);
 
