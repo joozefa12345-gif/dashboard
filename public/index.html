@@ -261,7 +261,7 @@ RUMBLE <span>SYSTEM</span>
 
 <div class="topbar">
 <h2>لوحة التحكم</h2>
-<button class="login" type="button">
+<button class="login" id="discordLogin" type="button">
 🎮 Login with Discord
 </button>
 </div>
@@ -332,6 +332,38 @@ RUMBLE <span>SYSTEM</span>
 
 </main>
 </div>
+
+<script>
+async function checkDiscordLogin() {
+    try {
+        const response = await fetch("/api/me");
+        const data = await response.json();
+
+        const loginButton = document.getElementById("discordLogin");
+
+        if (!loginButton) return;
+
+        if (data.loggedIn && data.user) {
+            loginButton.textContent =
+                "مرحباً " + (data.user.global_name || data.user.username);
+        }
+    } catch (error) {
+        console.error("Login check failed:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const loginButton = document.getElementById("discordLogin");
+
+    if (loginButton) {
+        loginButton.onclick = () => {
+            window.location.href = "/auth/discord";
+        };
+    }
+
+    checkDiscordLogin();
+});
+</script>
 
 </body>
 </html>
