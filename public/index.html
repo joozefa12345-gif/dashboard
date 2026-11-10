@@ -708,16 +708,24 @@ card.append(icon, name, status, controlButton);
   <script>
 const translations = {
     ar: {
-      welcomeTitle: "مرحباً بك في Rumble System 👑",
-welcomeDescription: "لوحة التحكم الرسمية لنظام Rumble System. تحكم في تجربة استخدامك وتابع حالة البوت وإحصائياته من مكان واحد.",
-        direction: "rtl",
-        dashboardTitle: "لوحة التحكم",
-        home: "🏠 الرئيسية",
-        statistics: "📊 الإحصائيات",
-        botStatus: "🤖 حالة البوت",
-        about: "ℹ️ حول النظام",
-        servers: "🖥️ سيرفراتي"
-    },
+    welcomeTitle: "مرحباً بك في Rumble System 👑",
+    welcomeDescription: "لوحة التحكم الرسمية لنظام Rumble System. تحكم في تجربة استخدامك وتابع حالة البوت وإحصائياته من مكان واحد.",
+    direction: "rtl",
+    dashboardTitle: "لوحة التحكم",
+    home: "🏠 الرئيسية",
+    statistics: "📊 الإحصائيات",
+    botStatus: "🤖 حالة البوت",
+    about: "ℹ️ حول النظام",
+    servers: "🖥️ سيرفراتي",
+
+    serverCount: "عدد السيرفرات",
+    userCount: "عدد المستخدمين",
+    encryptionCount: "عمليات التشفير",
+    systemStatus: "حالة النظام",
+    botSystemTitle: "🤖 نظام Rumble System",
+    botDescription: "أهلاً بك في لوحة التحكم الخاصة بالبوت. سيتم ربط البيانات الحقيقية وعرض حالة البوت هنا في المرحلة القادمة.",
+    developmentBadge: "واجهة قيد التطوير"
+},
 
     en: {
       welcomeTitle: "Welcome to Rumble System 👑",
@@ -728,7 +736,14 @@ welcomeDescription: "The official dashboard of Rumble System. Customize your exp
         statistics: "📊 Statistics",
         botStatus: "🤖 Bot Status",
         about: "ℹ️ About System",
-        servers: "🖥️ My Servers"
+        servers: "🖥️ My Servers",
+      serverCount: "Number of Servers",
+userCount: "Number of Users",
+encryptionCount: "Encryption Operations",
+systemStatus: "System Status",
+botSystemTitle: "🤖 Rumble System",
+botDescription: "Welcome to the bot dashboard. Real data and bot status will be displayed here in a future update.",
+developmentBadge: "Interface Under Development"
     },
 
     fr: {
@@ -740,7 +755,14 @@ welcomeDescription: "Le tableau de bord officiel de Rumble System. Personnalisez
         statistics: "📊 Statistiques",
         botStatus: "🤖 État du bot",
         about: "ℹ️ À propos",
-        servers: "🖥️ Mes serveurs"
+        servers: "🖥️ Mes serveurs",
+      serverCount: "Nombre de serveurs",
+userCount: "Nombre d’utilisateurs",
+encryptionCount: "Opérations de chiffrement",
+systemStatus: "État du système",
+botSystemTitle: "🤖 Système Rumble System",
+botDescription: "Bienvenue sur le tableau de bord du bot. Les données réelles et l’état du bot seront affichés ici lors d’une prochaine mise à jour.",
+developmentBadge: "Interface en développement"
     },
 
     de: {
@@ -752,7 +774,14 @@ welcomeDescription: "Das offizielle Dashboard von Rumble System. Passe deine Nut
         statistics: "📊 Statistiken",
         botStatus: "🤖 Bot-Status",
         about: "ℹ️ Über das System",
-        servers: "🖥️ Meine Server"
+        servers: "🖥️ Meine Server",
+      serverCount: "Anzahl der Server",
+userCount: "Anzahl der Benutzer",
+encryptionCount: "Verschlüsselungsvorgänge",
+systemStatus: "Systemstatus",
+botSystemTitle: "🤖 Rumble System",
+botDescription: "Willkommen im Bot-Dashboard. Echte Daten und der Bot-Status werden in einem zukünftigen Update hier angezeigt.",
+developmentBadge: "Oberfläche in Entwicklung"
     },
 
     es: {
@@ -764,9 +793,17 @@ welcomeDescription: "El panel oficial de Rumble System. Personaliza tu experienc
         statistics: "📊 Estadísticas",
         botStatus: "🤖 Estado del bot",
         about: "ℹ️ Sobre el sistema",
-        servers: "🖥️ Mis servidores"
+        servers: "🖥️ Mis servidores",
+      serverCount: "Número de servidores",
+userCount: "Número de usuarios",
+encryptionCount: "Operaciones de cifrado",
+systemStatus: "Estado del sistema",
+botSystemTitle: "🤖 Sistema Rumble System",
+botDescription: "Bienvenido al panel del bot. Los datos reales y el estado del bot se mostrarán aquí en una próxima actualización.",
+developmentBadge: "Interfaz en desarrollo"
     }
-};
+  };
+
 
 function changeLanguage(lang) {
     const selected = translations[lang];
