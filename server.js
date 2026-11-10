@@ -766,3 +766,62 @@ app.post(
                 `/guilds/${guildId}/channels`,
                 {
                     headers: {
+Authorization: `Bot ${BOT_TOKEN}`
+                }
+            }
+        );
+
+        if (!channelResponse.ok) {
+            return res.status(channelResponse.status).json({
+                error: "Could not verify the channel."
+            });
+        }
+
+        const channels = await channelResponse.json();
+        const channel = channels.find(
+            item => item.id === channelId
+        );
+
+        if (!channel) {
+            return res.status(400).json({
+                error: "Channel does not belong to this server."
+            });
+        }
+
+        const sendResponse = await discordFetch(
+            `/channels/${channelId}/messages`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bot ${BOT_TOKEN}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    embeds: [saved.rows[0].embed_data]
+                })
+            }
+        );
+
+        const sentMessage = await sendResponse.json();
+
+        if (!sendResponse.ok) {
+            return res.status(sendResponse.status).json({
+                error: "Discord could not send the embed."
+            });
+        }
+
+        res.json({
+            success: true,
+            message: sentMessage
+        });
+
+    } catch (error) {
+        console.error("Send embed error:", error);
+
+        res.status(500).json({
+            error: "Could not send embed."
+        });
+    }
+});
+
+module.exports = app;
