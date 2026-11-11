@@ -601,7 +601,7 @@ logoutButton.onclick = async () => {
         return;
     }
 
-    window.location.replace("/");
+    window.location.replace("/?loggedout=" + Date.now());
 };
         } else {
             loginButton.textContent = "🎮 Login with Discord";
