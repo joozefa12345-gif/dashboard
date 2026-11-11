@@ -781,7 +781,7 @@ app.post(
       res.status(201).json({
         image: {
           id: imageId,
-          url: `https://${process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || "rumble-system.vercel.app"}/images/${imageId}`,
+          url: `https://rumble-system.vercel.app/images/${imageId}`,
           mimeType,
           size: bytes.length
         }
