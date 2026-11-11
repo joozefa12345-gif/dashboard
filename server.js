@@ -182,6 +182,20 @@ async function ensureDatabase() {
         ON saved_embeds (guild_id)
       `);
       await pool.query(`
+        CREATE TABLE IF NOT EXISTS ticket_panels (
+          id BIGSERIAL PRIMARY KEY,
+          guild_id TEXT NOT NULL,
+          panel_name TEXT NOT NULL,
+          panel_data JSONB NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS ticket_panels_guild_id_idx
+        ON ticket_panels (guild_id)
+      `);
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS image_assets (
           image_id TEXT PRIMARY KEY,
           guild_id TEXT NOT NULL,
@@ -1123,6 +1137,122 @@ app.post("/api/guilds/:guildId/embeds/:embedId/send", async (req, res) => {
       error: "server_error",
       message: "Could not send the embed."
     });
+  }
+});
+
+// Ticket panel configuration API (up to five panels per server).
+app.get("/api/guilds/:guildId/roles", async (req, res) => {
+  const { guildId } = req.params;
+  if (!validSnowflake(guildId)) return res.status(400).json({ error: "invalid_guild_id" });
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    const result = await discordRequest(`/guilds/${guildId}/roles`, {
+      headers: { Authorization: `Bot ${BOT_TOKEN}` }
+    });
+    if (!result.response.ok) return res.status(502).json({ error: "roles_failed", message: "Could not load server roles." });
+    res.json({ roles: (result.data || []).filter(role => !role.managed && role.name !== "@everyone").map(role => ({ id: role.id, name: role.name, color: role.color, position: role.position })).sort((a,b) => b.position-a.position) });
+  } catch (error) {
+    console.error("Load roles failed:", error);
+    res.status(500).json({ error: "server_error", message: "Could not load server roles." });
+  }
+});
+
+function validateTicketPanel(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return "Invalid panel data.";
+  const required = ["panelChannelId", "ticketCategoryId", "transcriptChannelId"];
+  for (const key of required) if (!validSnowflake(data[key])) return "Choose a valid channel and category for every required field.";
+  if (!Array.isArray(data.supportRoleIds) || data.supportRoleIds.length < 1 || data.supportRoleIds.length > 20 || !data.supportRoleIds.every(validSnowflake)) return "Choose at least one support role.";
+  const lengths = [["panelTitle",256],["panelDescription",4000],["buttonLabel",80],["underMessage",1500],["welcomeMessage",2000],["panelName",80]];
+  for (const [key,max] of lengths) if (typeof data[key] !== "string" || data[key].length > max) return `Invalid ${key}.`;
+  if (!/^#[0-9a-fA-F]{6}$/.test(data.panelColor || "")) return "Invalid panel color.";
+  if (!["#e74c3c","#7f8c8d","#258cff","#2ecc71"].includes(data.underMessageColor)) return "Invalid message color.";
+  if (data.panelImageUrl && !isHttpUrl(data.panelImageUrl)) return "Panel image must be an HTTP or HTTPS URL.";
+  for (const key of ["claimColor","closeColor","transcriptColor"]) if (!/^#[0-9a-fA-F]{6}$/.test(data[key] || "")) return "Invalid button color.";
+  return null;
+}
+
+app.get("/api/guilds/:guildId/ticket-panels", async (req, res) => {
+  const { guildId } = req.params;
+  if (!validSnowflake(guildId)) return res.status(400).json({ error: "invalid_guild_id" });
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    await ensureDatabase();
+    const result = await pool.query(
+      `SELECT id, panel_name, panel_data, created_at, updated_at
+       FROM ticket_panels WHERE guild_id = $1 ORDER BY updated_at DESC, id DESC`,
+      [guildId]
+    );
+    res.json({ panels: result.rows.map(row => ({ ...row, id: String(row.id) })) });
+  } catch (error) {
+    console.error("Load ticket panels failed:", error);
+    res.status(500).json({ error: "server_error", message: "Could not load ticket panels." });
+  }
+});
+
+app.post("/api/guilds/:guildId/ticket-panels", async (req, res) => {
+  const { guildId } = req.params;
+  if (!validSnowflake(guildId)) return res.status(400).json({ error: "invalid_guild_id" });
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    const panelName = String(req.body?.panel_name || "").trim().slice(0,80);
+    const data = req.body?.panel_data;
+    const validationError = validateTicketPanel(data);
+    if (!panelName || validationError) return res.status(400).json({ error: "invalid_panel", message: validationError || "Panel name is required." });
+    await ensureDatabase();
+    const count = await pool.query("SELECT COUNT(*)::int AS total FROM ticket_panels WHERE guild_id = $1", [guildId]);
+    if (Number(count.rows[0].total) >= 5) return res.status(409).json({ error: "panel_limit", message: "This server already has five ticket panels." });
+    const result = await pool.query(
+      `INSERT INTO ticket_panels (guild_id, panel_name, panel_data)
+       VALUES ($1,$2,$3) RETURNING id, panel_name, panel_data, created_at, updated_at`,
+      [guildId, panelName, JSON.stringify(data)]
+    );
+    res.status(201).json({ panel: { ...result.rows[0], id: String(result.rows[0].id) } });
+  } catch (error) {
+    console.error("Create ticket panel failed:", error);
+    res.status(500).json({ error: "server_error", message: "Could not save ticket panel." });
+  }
+});
+
+app.put("/api/guilds/:guildId/ticket-panels/:panelId", async (req, res) => {
+  const { guildId, panelId } = req.params;
+  if (!validSnowflake(guildId) || !/^\\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id" });
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    const panelName = String(req.body?.panel_name || "").trim().slice(0,80);
+    const data = req.body?.panel_data;
+    const validationError = validateTicketPanel(data);
+    if (!panelName || validationError) return res.status(400).json({ error: "invalid_panel", message: validationError || "Panel name is required." });
+    await ensureDatabase();
+    const result = await pool.query(
+      `UPDATE ticket_panels SET panel_name=$1, panel_data=$2, updated_at=NOW()
+       WHERE id=$3 AND guild_id=$4 RETURNING id, panel_name, panel_data, created_at, updated_at`,
+      [panelName, JSON.stringify(data), panelId, guildId]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "panel_not_found", message: "Ticket panel not found." });
+    res.json({ panel: { ...result.rows[0], id: String(result.rows[0].id) } });
+  } catch (error) {
+    console.error("Update ticket panel failed:", error);
+    res.status(500).json({ error: "server_error", message: "Could not update ticket panel." });
+  }
+});
+
+app.delete("/api/guilds/:guildId/ticket-panels/:panelId", async (req, res) => {
+  const { guildId, panelId } = req.params;
+  if (!validSnowflake(guildId) || !/^\\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id" });
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    await ensureDatabase();
+    const result = await pool.query("DELETE FROM ticket_panels WHERE id=$1 AND guild_id=$2 RETURNING id", [panelId, guildId]);
+    if (!result.rows.length) return res.status(404).json({ error: "panel_not_found" });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Delete ticket panel failed:", error);
+    res.status(500).json({ error: "server_error", message: "Could not delete ticket panel." });
   }
 });
 
