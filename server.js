@@ -196,6 +196,12 @@ async function ensureDatabase() {
         ON ticket_panels (guild_id)
       `);
       await pool.query(`
+        ALTER TABLE ticket_panels
+        ADD COLUMN IF NOT EXISTS published_channel_id TEXT,
+        ADD COLUMN IF NOT EXISTS published_message_id TEXT,
+        ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ
+      `);
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS image_assets (
           image_id TEXT PRIMARY KEY,
           guild_id TEXT NOT NULL,
@@ -1175,6 +1181,46 @@ function validateTicketPanel(data) {
   for (const key of ["claimColor","closeColor","transcriptColor"]) if (!/^#[0-9a-fA-F]{6}$/.test(data[key] || "")) return "Invalid button color.";
   return null;
 }
+
+app.post("/api/guilds/:guildId/ticket-panels/:panelId/publish", async (req, res) => {
+  const { guildId, panelId } = req.params;
+  if (!validSnowflake(guildId) || !/^\\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id", message: "Invalid server or panel ID." });
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    await ensureDatabase();
+    const saved = await pool.query("SELECT panel_data FROM ticket_panels WHERE id=$1 AND guild_id=$2", [panelId, guildId]);
+    if (!saved.rows.length) return res.status(404).json({ error: "panel_not_found", message: "Ticket panel not found." });
+    const data = typeof saved.rows[0].panel_data === "string" ? JSON.parse(saved.rows[0].panel_data) : saved.rows[0].panel_data;
+    const validationError = validateTicketPanel(data);
+    if (validationError) return res.status(400).json({ error: "invalid_panel", message: validationError });
+    const channelResult = await discordRequest(`/guilds/${guildId}/channels`, { headers: { Authorization: `Bot ${BOT_TOKEN}` } });
+    if (!channelResult.response.ok) return res.status(502).json({ error: "channel_check_failed", message: "Could not verify the panel channel." });
+    const channel = (channelResult.data || []).find(item => item.id === data.panelChannelId);
+    if (!channel || (channel.type !== 0 && channel.type !== 5)) return res.status(400).json({ error: "invalid_channel", message: "The selected panel channel is not a text channel." });
+    const embed = { title: data.panelTitle, description: data.panelDescription, color: parseInt(String(data.panelColor).replace("#", ""), 16) };
+    if (data.panelImageUrl) embed.image = { url: data.panelImageUrl };
+    const messagePayload = {
+      embeds: [embed],
+      components: [{ type: 1, components: [{ type: 2, style: 1, label: String(data.buttonLabel || "فتح تذكرة").slice(0, 80), custom_id: `rumble_ticket_open:${panelId}` }] }]
+    };
+    if (data.underMessage) messagePayload.content = data.underMessage;
+    const sent = await discordRequest(`/channels/${data.panelChannelId}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bot ${BOT_TOKEN}` },
+      body: JSON.stringify(messagePayload)
+    });
+    if (!sent.response.ok) {
+      console.error("Publish ticket panel failed:", sent.response.status, sent.data);
+      return res.status(502).json({ error: "discord_publish_failed", message: sent.data?.message ? `Discord rejected the panel: ${sent.data.message}` : "Discord could not publish the ticket panel." });
+    }
+    await pool.query("UPDATE ticket_panels SET published_channel_id=$1, published_message_id=$2, published_at=NOW(), updated_at=NOW() WHERE id=$3 AND guild_id=$4", [data.panelChannelId, sent.data?.id || null, panelId, guildId]);
+    res.json({ success: true, channelId: data.panelChannelId, messageId: sent.data?.id || null });
+  } catch (error) {
+    console.error("Publish ticket panel failed:", error);
+    res.status(500).json({ error: "server_error", message: "Could not publish ticket panel." });
+  }
+});
 
 app.get("/api/guilds/:guildId/ticket-panels", async (req, res) => {
   const { guildId } = req.params;
