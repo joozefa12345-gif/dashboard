@@ -635,31 +635,304 @@ app.get("/api/guilds", async (req, res) => {
   }
 });
 
+// Get available text channels
 app.get("/api/guilds/:guildId/channels", async (req, res) => {
   const { guildId } = req.params;
-  if (!validSnowflake(guildId)) return res.status(400).json({ error: "invalid_guild_id" });
+
+  if (!validSnowflake(guildId)) {
+    return res.status(400).json({
+      error: "invalid_guild_id",
+      message: "Invalid server ID."
+    });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+
+    const result = await discordRequest(`/guilds/${guildId}/channels`, {
+      headers: { Authorization: `Bot ${BOT_TOKEN}` }
+    });
+
+    if (!result.response.ok) {
+      return res.status(502).json({
+        error: "channel_check_failed",
+        message: "Could not load server channels."
+      });
+    }
+
+    const channels = (result.data || [])
+      .filter(channel => channel.type === 0 || channel.type === 5)
+      .map(channel => ({
+        id: channel.id,
+        name: channel.name,
+        type: channel.type
+      }));
+
+    res.json({ channels });
+
+  } catch (error) {
+    console.error("Load channels failed:", error);
+    res.status(500).json({
+      error: "server_error",
+      message: "Could not load channels."
+    });
+  }
+});
+
+
+// Get saved embeds
+app.get("/api/guilds/:guildId/embeds", async (req, res) => {
+  const { guildId } = req.params;
+
+  if (!validSnowflake(guildId)) {
+    return res.status(400).json({ error: "invalid_guild_id" });
+  }
 
   try {
     const access = await getGuildAuthorization(req, res, guildId);
     if (!access) return;
 
     await ensureDatabase();
-    const saved = await pool.query(
-      `SELECT embed_data FROM saved_embeds WHERE id = $1 AND guild_id = $2`,
-      [embedId, guildId]
-    );
-    if (!saved.rows.length) return res.status(404).json({ error: "embed_not_found" });
 
-    const channelResult = await discordRequest(`/guilds/${guildId}/channels`, {
-      headers: { Authorization: `Bot ${BOT_TOKEN}` }
+    const result = await pool.query(
+      `SELECT id, embed_name, embed_data, created_at, updated_at
+       FROM saved_embeds
+       WHERE guild_id = $1
+       ORDER BY updated_at DESC, id DESC`,
+      [guildId]
+    );
+
+    res.json({
+      embeds: result.rows.map(item => ({
+        ...item,
+        id: String(item.id)
+      }))
     });
-    if (!channelResult.response.ok) {
-      return res.status(502).json({ error: "channel_check_failed", message: "Could not verify the selected channel." });
+
+  } catch (error) {
+    console.error("Load embeds failed:", error);
+    res.status(500).json({
+      error: "server_error",
+      message: "Could not load saved embeds."
+    });
+  }
+});
+
+
+// Create a new embed
+app.post("/api/guilds/:guildId/embeds", async (req, res) => {
+  const { guildId } = req.params;
+
+  if (!validSnowflake(guildId)) {
+    return res.status(400).json({ error: "invalid_guild_id" });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+
+    const normalized = normalizeEmbedBody(req.body || {});
+    const validationError = validateEmbed(normalized.data);
+
+    if (validationError) {
+      return res.status(400).json({
+        error: "invalid_embed",
+        message: validationError
+      });
     }
 
-    const channel = (channelResult.data || []).find(item => item.id === channelId);
+    await ensureDatabase();
+
+    const result = await pool.query(
+      `INSERT INTO saved_embeds
+       (guild_id, embed_name, embed_data)
+       VALUES ($1, $2, $3)
+       RETURNING id, embed_name, embed_data, created_at, updated_at`,
+      [guildId, normalized.name, JSON.stringify(normalized.data)]
+    );
+
+    const saved = result.rows[0];
+
+    res.status(201).json({
+      embed: {
+        ...saved,
+        id: String(saved.id)
+      }
+    });
+
+  } catch (error) {
+    console.error("Create embed failed:", error);
+    res.status(500).json({
+      error: "server_error",
+      message: "Could not save embed."
+    });
+  }
+});
+
+
+// Update an existing embed
+app.put("/api/guilds/:guildId/embeds/:embedId", async (req, res) => {
+  const { guildId, embedId } = req.params;
+
+  if (!validSnowflake(guildId) || !/^\d{1,20}$/.test(embedId)) {
+    return res.status(400).json({ error: "invalid_id" });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+
+    const normalized = normalizeEmbedBody(req.body || {});
+    const validationError = validateEmbed(normalized.data);
+
+    if (validationError) {
+      return res.status(400).json({
+        error: "invalid_embed",
+        message: validationError
+      });
+    }
+
+    await ensureDatabase();
+
+    const result = await pool.query(
+      `UPDATE saved_embeds
+       SET embed_name = $1,
+           embed_data = $2,
+           updated_at = NOW()
+       WHERE id = $3 AND guild_id = $4
+       RETURNING id, embed_name, embed_data, created_at, updated_at`,
+      [
+        normalized.name,
+        JSON.stringify(normalized.data),
+        embedId,
+        guildId
+      ]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({
+        error: "embed_not_found",
+        message: "Saved embed was not found."
+      });
+    }
+
+    const saved = result.rows[0];
+
+    res.json({
+      embed: {
+        ...saved,
+        id: String(saved.id)
+      }
+    });
+
+  } catch (error) {
+    console.error("Update embed failed:", error);
+    res.status(500).json({
+      error: "server_error",
+      message: "Could not update embed."
+    });
+  }
+});
+
+
+// Delete an embed
+app.delete("/api/guilds/:guildId/embeds/:embedId", async (req, res) => {
+  const { guildId, embedId } = req.params;
+
+  if (!validSnowflake(guildId) || !/^\d{1,20}$/.test(embedId)) {
+    return res.status(400).json({ error: "invalid_id" });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+
+    await ensureDatabase();
+
+    const result = await pool.query(
+      `DELETE FROM saved_embeds
+       WHERE id = $1 AND guild_id = $2
+       RETURNING id`,
+      [embedId, guildId]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({
+        error: "embed_not_found",
+        message: "Saved embed was not found."
+      });
+    }
+
+    res.json({ success: true });
+
+  } catch (error) {
+    console.error("Delete embed failed:", error);
+    res.status(500).json({
+      error: "server_error",
+      message: "Could not delete embed."
+    });
+  }
+});
+
+
+// Send a saved embed to Discord
+app.post("/api/guilds/:guildId/embeds/:embedId/send", async (req, res) => {
+  const { guildId, embedId } = req.params;
+  const { channelId } = req.body || {};
+
+  if (!validSnowflake(guildId) ||
+      !/^\d{1,20}$/.test(embedId) ||
+      !validSnowflake(channelId)) {
+    return res.status(400).json({
+      error: "invalid_id",
+      message: "Invalid server, embed, or channel ID."
+    });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+
+    await ensureDatabase();
+
+    const saved = await pool.query(
+      `SELECT embed_data
+       FROM saved_embeds
+       WHERE id = $1 AND guild_id = $2`,
+      [embedId, guildId]
+    );
+
+    if (!saved.rows.length) {
+      return res.status(404).json({
+        error: "embed_not_found",
+        message: "Saved embed was not found."
+      });
+    }
+
+    const channelResult = await discordRequest(
+      `/guilds/${guildId}/channels`,
+      {
+        headers: { Authorization: `Bot ${BOT_TOKEN}` }
+      }
+    );
+
+    if (!channelResult.response.ok) {
+      return res.status(502).json({
+        error: "channel_check_failed",
+        message: "Could not verify the selected channel."
+      });
+    }
+
+    const channel = (channelResult.data || []).find(
+      item => item.id === channelId
+    );
+
     if (!channel || (channel.type !== 0 && channel.type !== 5)) {
-      return res.status(400).json({ error: "invalid_channel", message: "The selected channel is not a supported text channel." });
+      return res.status(400).json({
+        error: "invalid_channel",
+        message: "The selected channel is not a supported text channel."
+      });
     }
 
     const embedData = typeof saved.rows[0].embed_data === "string"
@@ -667,28 +940,49 @@ app.get("/api/guilds/:guildId/channels", async (req, res) => {
       : saved.rows[0].embed_data;
 
     const validationError = validateEmbed(embedData);
-    if (validationError) return res.status(400).json({ error: "invalid_embed", message: validationError });
 
-    const sendResult = await discordRequest(`/channels/${channelId}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bot ${BOT_TOKEN}` },
-      body: JSON.stringify({ embeds: [embedData] })
-    });
+    if (validationError) {
+      return res.status(400).json({
+        error: "invalid_embed",
+        message: validationError
+      });
+    }
+
+    const sendResult = await discordRequest(
+      `/channels/${channelId}/messages`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bot ${BOT_TOKEN}` },
+        body: JSON.stringify({ embeds: [embedData] })
+      }
+    );
 
     if (!sendResult.response.ok) {
-      console.error("Discord send embed failed:", sendResult.response.status, sendResult.data);
+      console.error(
+        "Discord send embed failed:",
+        sendResult.response.status,
+        sendResult.data
+      );
+
       return res.status(502).json({
         error: "discord_send_failed",
-        message: sendResult.data && sendResult.data.message
+        message: sendResult.data?.message
           ? `Discord rejected the message: ${sendResult.data.message}`
           : "Discord could not send the embed."
       });
     }
 
-    res.json({ success: true, messageId: sendResult.data && sendResult.data.id });
+    res.json({
+      success: true,
+      messageId: sendResult.data?.id
+    });
+
   } catch (error) {
     console.error("Send embed failed:", error);
-    res.status(500).json({ error: "server_error", message: "Could not send embed." });
+    res.status(500).json({
+      error: "server_error",
+      message: "Could not send the embed."
+    });
   }
 });
 
