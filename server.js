@@ -26,7 +26,7 @@ const pool = new Pool({
 });
 
 const DISCORD_API = "https://discord.com/api/v10";
-
+const refreshLocks = new Map();
 function sign(value) {
     return crypto
         .createHmac("sha256", SESSION_SECRET)
