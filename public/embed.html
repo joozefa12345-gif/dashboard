@@ -118,7 +118,7 @@ hr{border:0;border-top:1px solid #24466d;margin:22px 0}
 <hr>
 
 <h2 id="savedTitle">📂 الإيمبدات المحفوظة</h2>
-<button id="refreshButton" class="secondary">🔄 تحديث القائمة</button>
+<button id="refreshSavedButton" class="secondary">🔄 تحديث الإيمبدات</button>
 <div id="savedList" class="status">جارٍ التحميل...</div>
 
 <hr>
@@ -130,7 +130,7 @@ hr{border:0;border-top:1px solid #24466d;margin:22px 0}
 <select id="channelSelect" disabled>
 <option value="">جارٍ تحميل الرومات...</option>
 </select>
-
+<button id="refreshChannelsButton" class="secondary">🔄 تحديث الرومات</button>
 <button id="sendButton" disabled>🚀 إرسال الإيمبد المحدد</button>
 
 <div id="sendStatus" class="status" hidden></div>
@@ -189,7 +189,8 @@ fields:"📋 حقول الإيمبد",add:"➕ إضافة حقل",
 footer:"النص السفلي",preview:"👁️ معاينة الإيمبد",
 back:"← العودة إلى لوحة السيرفر",
 saved:"📂 الإيمبدات المحفوظة",
-refresh:"🔄 تحديث القائمة",
+refreshSaved:"🔄 تحديث الإيمبدات",
+refreshChannels:"🔄 تحديث الرومات",
 send:"🚀 إرسال إلى Discord",
 channel:"اختر روم الإرسال",
 save:"💾 حفظ الإيمبد",
@@ -233,7 +234,9 @@ imageUrl:"Main Image URL",thumbnailUrl:"Thumbnail URL",
 fields:"📋 Embed Fields",add:"➕ Add Field",
 footer:"Footer Text",preview:"👁️ Embed Preview",
 back:"← Back to Server Dashboard",
-saved:"📂 Saved Embeds",refresh:"🔄 Refresh List",
+saved:"📂 Saved Embeds",
+refreshSaved:"🔄 Refresh Embeds",
+refreshChannels:"🔄 Refresh Channels",
 send:"🚀 Send to Discord",channel:"Choose Channel",
 save:"💾 Save Embed",new:"➕ New Design",
 sendButton:"🚀 Send Selected Embed",
@@ -276,7 +279,9 @@ fields:"📋 Champs de l'Embed",
 add:"➕ Ajouter un champ",footer:"Texte du pied de page",
 preview:"👁️ Aperçu de l'Embed",
 back:"← Retour au tableau de bord",
-saved:"📂 Embeds enregistrés",refresh:"🔄 Actualiser",
+saved:"📂 Embeds enregistrés",
+refreshSaved:"🔄 Actualiser les Embeds",
+refreshChannels:"🔄 Actualiser les salons",
 send:"🚀 Envoyer à Discord",channel:"Choisir un salon",
 save:"💾 Enregistrer",new:"➕ Nouveau design",
 sendButton:"🚀 Envoyer l'Embed",
@@ -314,7 +319,9 @@ imageUrl:"Hauptbild-URL",thumbnailUrl:"Miniatur-URL",
 fields:"📋 Embed-Felder",add:"➕ Feld hinzufügen",
 footer:"Fußzeilentext",preview:"👁️ Embed-Vorschau",
 back:"← Zurück zum Server-Dashboard",
-saved:"📂 Gespeicherte Embeds",refresh:"🔄 Aktualisieren",
+saved:"📂 Gespeicherte Embeds",
+refreshSaved:"🔄 Embeds aktualisieren",
+refreshChannels:"🔄 Kanäle aktualisieren",
 send:"🚀 An Discord senden",channel:"Kanal auswählen",
 save:"💾 Embed speichern",new:"➕ Neues Design",
 sendButton:"🚀 Embed senden",
@@ -353,7 +360,9 @@ thumbnailUrl:"URL de miniatura",
 fields:"📋 Campos del Embed",add:"➕ Añadir campo",
 footer:"Texto del pie",preview:"👁️ Vista previa del Embed",
 back:"← Volver al panel del servidor",
-saved:"📂 Embeds guardados",refresh:"🔄 Actualizar",
+saved:"📂 Embeds guardados",
+refreshSaved:"🔄 Actualizar Embeds",
+refreshChannels:"🔄 Actualizar canales",
 send:"🚀 Enviar a Discord",channel:"Elegir canal",
 save:"💾 Guardar Embed",new:"➕ Nuevo diseño",
 sendButton:"🚀 Enviar Embed",
@@ -380,7 +389,7 @@ timeout:"Tiempo de conexión agotado.",
 imageError:"No se pudo cargar la imagen."
 }
 
-};
+  }
 
 const $ = id => document.getElementById(id);
 
@@ -474,7 +483,8 @@ add:"addField",
 footer:"footerLabel",
 preview:"previewTitle",
 saved:"savedTitle",
-refresh:"refreshButton",
+refreshSaved:"refreshSavedButton",
+refreshChannels:"refreshChannelsButton",
 send:"sendTitle",
 channel:"channelLabel",
 save:"saveButton",
@@ -1154,11 +1164,11 @@ showStatus("editorStatus",t("newReady"));
 
 });
 
-// Refresh
+// Refresh Saved Embeds
 
-$("refreshButton").addEventListener("click",async()=>{
+$("refreshSavedButton").addEventListener("click",async()=>{
 
-const button=$("refreshButton");
+const button=$("refreshSavedButton");
 
 if(button.disabled)return;
 
@@ -1166,10 +1176,29 @@ button.disabled=true;
 
 try{
 
-await Promise.all([
-loadSaved(),
-loadChannels()
-]);
+await loadSaved();
+
+}finally{
+
+button.disabled=false;
+
+}
+
+});
+
+// Refresh Channels
+
+$("refreshChannelsButton").addEventListener("click",async()=>{
+
+const button=$("refreshChannelsButton");
+
+if(button.disabled || channelRequest)return;
+
+button.disabled=true;
+
+try{
+
+await loadChannels();
 
 }finally{
 
