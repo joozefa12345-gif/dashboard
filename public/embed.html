@@ -416,6 +416,7 @@ function timeoutSignal(){
 return AbortSignal.timeout(20000);
 }
 
+
 async function api(url,options={}){
 
 const response = await fetch(url,{
@@ -440,7 +441,7 @@ throw new Error(t("login"));
 }
 
 if(!response.ok){
-throw new Error(data.error || t("failed"));
+throw new Error(data.message || data.error || t("failed"));
 }
 
 return data;
@@ -545,9 +546,13 @@ document.querySelectorAll(".field-box").forEach(box=>{
 const name=box.querySelector(".field-name").value.trim();
 const value=box.querySelector(".field-value").value.trim();
 
-if(name && value){
-fields.push({name,value});
+if(!name && !value)return;
+
+if(!name || !value){
+throw new Error("Please complete both field name and value.");
 }
+
+fields.push({name,value});
 
 });
 
@@ -600,52 +605,39 @@ const image=$("previewImage");
 
 const imageSource=temporaryImage || embed.image?.url || "";
 
-image.style.display=imageSource?"block":"none";
+function updatePreview(){
+  const title = $("embedTitle").value;
+  const description = $("embedDescription").value;
+  const color = $("embedColor").value;
 
-if(imageSource){
-if(image.src!==imageSource)image.src=imageSource;
-}else{
-image.removeAttribute("src");
+  $("previewTitle").textContent = title;
+  $("previewDescription").textContent = description;
+
+  $("previewEmbed").style.borderColor = color;
+
+  const fieldsContainer = $("previewFields");
+  fieldsContainer.innerHTML = "";
+
+  document.querySelectorAll(".field-item").forEach(item => {
+    const name = item.querySelector(".field-name").value;
+    const value = item.querySelector(".field-value").value;
+
+    if (!name && !value) return;
+
+    const field = document.createElement("div");
+    field.className = "preview-field";
+
+    const fieldName = document.createElement("strong");
+    fieldName.textContent = name;
+
+    const fieldValue = document.createElement("p");
+    fieldValue.textContent = value;
+
+    field.appendChild(fieldName);
+    field.appendChild(fieldValue);
+    fieldsContainer.appendChild(field);
+  });
 }
-
-const thumbnail=$("previewThumbnail");
-
-thumbnail.replaceChildren();
-
-const thumbSource=temporaryThumbnail || embed.thumbnail?.url || "";
-
-if(thumbSource){
-
-const img=document.createElement("img");
-
-img.src=thumbSource;
-thumbnail.appendChild(img);
-
-}
-
-const fields=$("previewFields");
-
-fields.replaceChildren();
-
-embed.fields.forEach(item=>{
-
-const div=document.createElement("div");
-div.className="embed-field";
-
-const strong=document.createElement("strong");
-strong.textContent=item.name;
-
-const span=document.createElement("span");
-span.textContent=item.value;
-
-div.append(strong,span);
-
-fields.appendChild(div);
-
-});
-
-}
-
 function safePreview(){
 
 try{
@@ -799,9 +791,11 @@ showStatus("savedList",t("noGuild"));
 return;
 }
 
-showStatus("savedList",t("loading"));
+const refreshButton=$("refreshButton");
 
-$("refreshButton").disabled=true;
+refreshButton.disabled=true;
+
+showStatus("savedList",t("loading"));
 
 try{
 
@@ -819,7 +813,7 @@ showStatus("savedList",error.message);
 
 }finally{
 
-$("refreshButton").disabled=false;
+refreshButton.disabled=false;
 
 }
 
@@ -870,17 +864,19 @@ list.appendChild(box);
 
 async function saveEmbed(){
 
-if(!guildId)throw new Error(t("noGuild"));
-
 if(saving)return;
 
 saving=true;
 
 $("saveButton").disabled=true;
 
-showStatus("editorStatus",t("saving"));
-
 try{
+
+if(!guildId){
+throw new Error(t("noGuild"));
+}
+
+showStatus("editorStatus",t("saving"));
 
 const name=$("embedName").value.trim() || "Untitled Embed";
 
@@ -945,22 +941,26 @@ showStatus("editorStatus",error.message);
 
 }
 
+
 async function loadChannels(){
 
+const select=$("channelSelect");
+const sendButton=$("sendButton");
+
 if(!guildId){
-$("channelSelect").replaceChildren(
+select.replaceChildren(
 new Option(t("noGuild"),"")
 );
+select.disabled=true;
+sendButton.disabled=true;
 return;
 }
 
 if(channelRequest)return;
 
 channelRequest=true;
-
-const select=$("channelSelect");
-
 select.disabled=true;
+sendButton.disabled=true;
 
 select.replaceChildren(
 new Option(t("channelLoading"),"")
@@ -989,8 +989,10 @@ select.appendChild(option);
 
 if(!channels.length){
 select.add(new Option(t("noChannels"),""));
+select.disabled=true;
 }else{
 select.selectedIndex=0;
+select.disabled=false;
 }
 
 }catch(error){
@@ -999,16 +1001,13 @@ select.replaceChildren(
 new Option(error.message,"")
 );
 
+select.disabled=true;
 showStatus("sendStatus",error.message);
 
 }finally{
 
 channelRequest=false;
-
-select.disabled=select.options.length===0 ||
-!select.options[0].value;
-
-$("sendButton").disabled=select.disabled;
+sendButton.disabled=select.disabled;
 
 }
 
@@ -1017,6 +1016,12 @@ $("sendButton").disabled=select.disabled;
 async function sendEmbed(){
 
 if(sending)return;
+
+sending=true;
+
+$("sendButton").disabled=true;
+
+try{
 
 if(!editingId){
 throw new Error(t("saveFirst"));
@@ -1028,13 +1033,7 @@ if(!channelId){
 throw new Error(t("chooseChannel"));
 }
 
-sending=true;
-
-$("sendButton").disabled=true;
-
 showStatus("sendStatus",t("sending"));
-
-try{
 
 await api(
 `/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}/send`,
@@ -1056,6 +1055,8 @@ sending=false;
 
 $("sendButton").disabled=
 !$("channelSelect").value;
+
+}
 
 }
 
