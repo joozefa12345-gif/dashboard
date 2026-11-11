@@ -597,6 +597,24 @@ app.get("/api/me", async (req, res) => {
   }
 });
 
+app.post("/api/logout", async (req, res) => {
+  try {
+    const session = readSessionCookie(req);
+    if (session && session.sid) {
+      await ensureDatabase();
+      await pool.query("DELETE FROM oauth_sessions WHERE sid = $1", [session.sid]);
+    }
+    clearCookie(res, COOKIE_NAME);
+    clearCookie(res, STATE_COOKIE_NAME);
+    res.set("Cache-Control", "no-store");
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Logout failed:", error);
+    clearCookie(res, COOKIE_NAME);
+    clearCookie(res, STATE_COOKIE_NAME);
+    return res.status(500).json({ error: "logout_failed", message: "Could not complete logout." });
+  }
+});
 app.get("/api/guilds", async (req, res) => {
   try {
     let auth = await getValidSession(req, res);
@@ -988,6 +1006,13 @@ app.post("/api/guilds/:guildId/embeds/:embedId/send", async (req, res) => {
 
 app.use("/api", (req, res) => {
   res.status(404).json({ error: "not_found" });
+});
+
+app.use((req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD") {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  }
+  next();
 });
 
 app.use(express.static("public"));
