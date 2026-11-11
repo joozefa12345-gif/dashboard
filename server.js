@@ -611,6 +611,24 @@ app.get("/api/me", async (req, res) => {
   }
 });
 
+app.post("/api/logout", async (req, res) => {
+  try {
+    const session = readSessionCookie(req);
+    if (session && session.sid) {
+      await ensureDatabase();
+      await pool.query("DELETE FROM oauth_sessions WHERE sid = $1", [session.sid]);
+    }
+    clearCookie(res, COOKIE_NAME);
+    clearCookie(res, STATE_COOKIE_NAME);
+    res.set("Cache-Control", "no-store");
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Logout failed:", error);
+    clearCookie(res, COOKIE_NAME);
+    clearCookie(res, STATE_COOKIE_NAME);
+    return res.status(500).json({ error: "logout_failed", message: "Could not complete logout." });
+  }
+});
 app.get("/api/guilds", async (req, res) => {
   try {
     let auth = await getValidSession(req, res);
@@ -763,7 +781,7 @@ app.post(
       res.status(201).json({
         image: {
           id: imageId,
-          url: `https://rumble-system.vercel.app/images/${imageId}`,
+          url: `https://${process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || "rumble-system.vercel.app"}/images/${imageId}`,
           mimeType,
           size: bytes.length
         }
