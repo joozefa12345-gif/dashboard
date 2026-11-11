@@ -805,10 +805,6 @@ showStatus("savedList",t("noGuild"));
 return;
 }
 
-const refreshButton=$("refreshButton");
-
-refreshButton.disabled=true;
-
 showStatus("savedList",t("loading"));
 
 try{
@@ -825,13 +821,9 @@ renderSaved();
 
 showStatus("savedList",error.message);
 
-}finally{
-
-refreshButton.disabled=false;
-
 }
 
-}
+  }
 
 function renderSaved(){
 
@@ -1166,10 +1158,24 @@ showStatus("editorStatus",t("newReady"));
 
 $("refreshButton").addEventListener("click",async()=>{
 
+const button=$("refreshButton");
+
+if(button.disabled)return;
+
+button.disabled=true;
+
+try{
+
 await Promise.all([
 loadSaved(),
 loadChannels()
 ]);
+
+}finally{
+
+button.disabled=false;
+
+}
 
 });
 
