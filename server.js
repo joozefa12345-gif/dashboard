@@ -1130,6 +1130,13 @@ app.use("/api", (req, res) => {
   res.status(404).json({ error: "not_found" });
 });
 
+app.use((req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD") {
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  }
+  next();
+});
+
 app.use(express.static("public"));
 
 app.use((req, res, next) => {
