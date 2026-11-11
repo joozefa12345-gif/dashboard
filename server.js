@@ -1184,7 +1184,7 @@ function validateTicketPanel(data) {
 
 app.post("/api/guilds/:guildId/ticket-panels/:panelId/publish", async (req, res) => {
   const { guildId, panelId } = req.params;
-  if (!validSnowflake(guildId) || !/^\\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id", message: "Invalid server or panel ID." });
+  if (!validSnowflake(guildId) || !/^\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id", message: "Invalid server or panel ID." });
   try {
     const access = await getGuildAuthorization(req, res, guildId);
     if (!access) return;
