@@ -182,6 +182,20 @@ async function ensureDatabase() {
         ON saved_embeds (guild_id)
       `);
       await pool.query(`
+        CREATE TABLE IF NOT EXISTS image_assets (
+          image_id TEXT PRIMARY KEY,
+          guild_id TEXT NOT NULL,
+          mime_type TEXT NOT NULL,
+          image_data BYTEA NOT NULL,
+          byte_size INTEGER NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS image_assets_guild_id_idx
+        ON image_assets (guild_id)
+      `);
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS oauth_sessions (
           sid TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
@@ -680,6 +694,114 @@ app.get("/api/guilds/:guildId/channels", async (req, res) => {
   }
 });
 
+
+// Upload a permanent image for an authorized server manager.
+// The 4 MiB cap stays below Vercel's serverless request-body limit.
+app.post(
+  "/api/guilds/:guildId/images",
+  express.raw({ type: "*/*", limit: "4mb" }),
+  async (req, res) => {
+    const { guildId } = req.params;
+    if (!validSnowflake(guildId)) {
+      return res.status(400).json({ error: "invalid_guild_id", message: "Invalid server ID." });
+    }
+
+    try {
+      const access = await getGuildAuthorization(req, res, guildId);
+      if (!access) return;
+
+      if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+        return res.status(400).json({ error: "empty_image", message: "Choose an image file first." });
+      }
+      if (req.body.length > 4 * 1024 * 1024) {
+        return res.status(413).json({ error: "image_too_large", message: "Image must be 4 MB or smaller." });
+      }
+
+      // Verify file signatures rather than trusting the browser-supplied MIME type.
+      const bytes = req.body;
+      let mimeType = null;
+      if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) {
+        mimeType = "image/png";
+      } else if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+        mimeType = "image/jpeg";
+      } else if (bytes.length >= 6 && ["GIF87a", "GIF89a"].includes(bytes.subarray(0, 6).toString("ascii"))) {
+        mimeType = "image/gif";
+      } else if (bytes.length >= 12 && bytes.subarray(0, 4).toString("ascii") === "RIFF" &&
+                 bytes.subarray(8, 12).toString("ascii") === "WEBP") {
+        mimeType = "image/webp";
+      }
+      if (!mimeType) {
+        return res.status(415).json({
+          error: "unsupported_image",
+          message: "Supported formats: PNG, JPG, GIF, and WEBP."
+        });
+      }
+
+      await ensureDatabase();
+      const usage = await pool.query(
+        `SELECT COUNT(*)::int AS image_count,
+                COALESCE(SUM(byte_size), 0)::bigint AS total_bytes
+         FROM image_assets WHERE guild_id = $1`,
+        [guildId]
+      );
+      const imageCount = Number(usage.rows[0].image_count || 0);
+      const totalBytes = Number(usage.rows[0].total_bytes || 0);
+      if (imageCount >= 25 || totalBytes + bytes.length > 20 * 1024 * 1024) {
+        return res.status(413).json({
+          error: "guild_image_quota",
+          message: "This server has reached its image storage limit (25 images or 20 MB)."
+        });
+      }
+
+      const imageId = crypto.randomBytes(32).toString("hex");
+      await pool.query(
+        `INSERT INTO image_assets (image_id, guild_id, mime_type, image_data, byte_size)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [imageId, guildId, mimeType, bytes, bytes.length]
+      );
+
+      res.status(201).json({
+        image: {
+          id: imageId,
+          url: `https://rumble-system.vercel.app/images/${imageId}`,
+          mimeType,
+          size: bytes.length
+        }
+      });
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      res.status(500).json({ error: "image_upload_failed", message: "Could not upload the image." });
+    }
+  }
+);
+
+// Public immutable image URL so Discord can fetch it without a dashboard session.
+app.get("/images/:imageId", async (req, res) => {
+  const { imageId } = req.params;
+  if (!/^[a-f0-9]{64}$/.test(imageId)) {
+    return res.status(404).end();
+  }
+  try {
+    await ensureDatabase();
+    const result = await pool.query(
+      "SELECT mime_type, image_data FROM image_assets WHERE image_id = $1",
+      [imageId]
+    );
+    if (!result.rows.length) return res.status(404).end();
+
+    res.set({
+      "Content-Type": result.rows[0].mime_type,
+      "Content-Length": String(result.rows[0].image_data.length),
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Disposition": "inline"
+    });
+    res.status(200).send(result.rows[0].image_data);
+  } catch (error) {
+    console.error("Image delivery failed:", error);
+    res.status(500).end();
+  }
+});
 
 // Get saved embeds
 app.get("/api/guilds/:guildId/embeds", async (req, res) => {
