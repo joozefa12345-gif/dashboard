@@ -62,7 +62,7 @@ input:focus,textarea:focus,select:focus{border-color:#258cff}textarea{min-height
 <div class="row"><div><label>اسم زر الاستلام</label><input id="claimLabel" maxlength="80" value="استلام"></div><div><label>لون زر الاستلام</label><input type="color" id="claimColor" value="#2ecc71"></div></div>
 <div class="row"><div><label>اسم زر القفل</label><input id="closeLabel" maxlength="80" value="قفل التكت"></div><div><label>لون زر القفل</label><input type="color" id="closeColor" value="#e74c3c"></div></div>
 <div class="row"><div><label>اسم زر Transcript</label><input id="transcriptLabel" maxlength="80" value="Transcript"></div><div><label>لون زر Transcript</label><input type="color" id="transcriptColor" value="#258cff"></div></div>
-<div class="actions"><button id="savePanel">💾 حفظ اللوحة</button><button id="cancelEdit" class="secondary">إلغاء</button></div>
+<div class="actions"><button id="savePanel">💾 حفظ اللوحة</button><button id="publishPanel">📨 حفظ ونشر اللوحة في Discord</button><button id="cancelEdit" class="secondary">إلغاء</button></div>
 <div id="editorStatus" class="status hidden"></div>
 </section>
 <section class="card">
@@ -92,7 +92,34 @@ function showList(){$("editorView").classList.add("hidden");$("listView").classL
 function renderList(){const list=$("panelList");list.replaceChildren();$("countText").textContent=panels.length+" / 5 Panels";$("addPanel").disabled=panels.length>=5;if(!panels.length){const p=document.createElement("div");p.className="item muted";p.textContent="لسه مفيش Panels. اضغط Add Panel لإنشاء أول لوحة.";list.append(p)}panels.forEach(p=>{const box=document.createElement("div");box.className="item";const h=document.createElement("h3");h.textContent=p.panel_name;const desc=document.createElement("div");desc.className="muted";desc.textContent=p.panel_data?.panelTitle||"Ticket Panel";const actions=document.createElement("div");actions.className="item-actions";const edit=document.createElement("button");edit.textContent="تعديل";edit.onclick=()=>openEditor(p);const del=document.createElement("button");del.className="danger";del.textContent="حذف";del.onclick=()=>deletePanel(p);actions.append(edit,del);box.append(h,desc,actions);list.append(box)});status("listStatus","تم تحميل "+panels.length+" من 5 Panels.",true)}
 async function loadPanels(){status("listStatus","جارٍ تحميل اللوحات...");const d=await api("/api/guilds/"+guildId+"/ticket-panels");panels=d.panels||[];renderList()}
 async function deletePanel(p){if(!confirm("متأكد إنك عايز تحذف "+p.panel_name+"؟"))return;try{await api("/api/guilds/"+guildId+"/ticket-panels/"+p.id,{method:"DELETE"});await loadPanels()}catch(e){status("listStatus",e.message)}}
-async function savePanel(){const name=$("panelName").value.trim();const data=collect();if(!name)return status("editorStatus","اكتب اسم اللوحة الأول.");if(!data.panelChannelId||!data.ticketCategoryId||!data.transcriptChannelId||!data.supportRoleIds.length)return status("editorStatus","اختار روم اللافتة وCategory التكت وروم Transcript ورتبة دعم واحدة على الأقل.");const file=$("panelImageFile").files[0];if(file){try{status("editorStatus","جارٍ رفع الصورة...");const response=await fetch("/api/guilds/"+guildId+"/images",{method:"POST",credentials:"same-origin",headers:{"Content-Type":file.type},body:file});const result=await response.json();if(!response.ok)throw new Error(result.message||"فشل رفع الصورة");data.panelImageUrl=result.image.url;$("panelImageUrl").value=data.panelImageUrl}catch(e){return status("editorStatus",e.message)}}const payload={panel_name:name,panel_data:data};try{status("editorStatus","جارٍ حفظ اللوحة...");const url="/api/guilds/"+guildId+"/ticket-panels"+(editingId?"/"+editingId:"");const result=await api(url,{method:editingId?"PUT":"POST",body:JSON.stringify(payload)});if(editingId)panels=panels.map(p=>p.id===editingId?result.panel:p);else panels.unshift(result.panel);renderList();showList()}catch(e){status("editorStatus",e.message)}}
+async function savePanel(keepEditor=false){
+ const name=$("panelName").value.trim(),data=collect();
+ if(!name){status("editorStatus","اكتب اسم اللوحة الأول.");return false}
+ if(!data.panelChannelId||!data.ticketCategoryId||!data.transcriptChannelId||!data.supportRoleIds.length){status("editorStatus","اختار روم اللافتة وCategory التكت وروم Transcript ورتبة دعم واحدة على الأقل.");return false}
+ const file=$("panelImageFile").files[0];
+ if(file){try{status("editorStatus","جارٍ رفع الصورة...");const response=await fetch("/api/guilds/"+guildId+"/images",{method:"POST",credentials:"same-origin",headers:{"Content-Type":file.type},body:file});const result=await response.json();if(!response.ok)throw new Error(result.message||"فشل رفع الصورة");data.panelImageUrl=result.image.url;$("panelImageUrl").value=data.panelImageUrl}catch(e){status("editorStatus",e.message);return false}}
+ const payload={panel_name:name,panel_data:data};
+ try{
+  status("editorStatus","جارٍ حفظ اللوحة...");
+  const url="/api/guilds/"+guildId+"/ticket-panels"+(editingId?"/"+editingId:"");
+  const result=await api(url,{method:editingId?"PUT":"POST",body:JSON.stringify(payload)});
+  editingId=result.panel.id;
+  const index=panels.findIndex(x=>x.id===editingId);
+  if(index>=0)panels[index]=result.panel;else panels.unshift(result.panel);
+  renderList();if(!keepEditor)showList();return true;
+ }catch(e){status("editorStatus",e.message);return false}
+}
+async function publishPanel(){
+ const ok=await savePanel(true);if(!ok)return;
+ const button=$("publishPanel");button.disabled=true;
+ try{
+  status("editorStatus","جارٍ نشر اللوحة في Discord...");
+  await api("/api/guilds/"+guildId+"/ticket-panels/"+editingId+"/publish",{method:"POST",body:"{}"});
+  status("editorStatus","✅ تم نشر اللوحة في Discord بنجاح!");
+ }catch(e){status("editorStatus","تعذر النشر: "+e.message)}
+ finally{button.disabled=false}
+}
+$("publishPanel").onclick=publishPanel;
 $("addPanel").onclick=()=>{if(panels.length>=5)return;openEditor()};$("backToList").onclick=showList;$("cancelEdit").onclick=showList;$("savePanel").onclick=savePanel;
 fieldIds.forEach(id=>$(id).addEventListener("input",updatePreview));$("supportRoles").addEventListener("change",updatePreview);
 $("panelImageFile").addEventListener("change",()=>{const f=$("panelImageFile").files[0];previewUploadDataUrl="";if(!f){updatePreview();return}const reader=new FileReader();reader.onload=()=>{previewUploadDataUrl=String(reader.result||"");updatePreview()};reader.onerror=()=>{status("editorStatus","تعذر عرض الصورة المختارة. جرّب صورة PNG أو JPG أو WEBP.");updatePreview()};reader.readAsDataURL(f)});
