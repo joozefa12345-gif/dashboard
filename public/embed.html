@@ -567,10 +567,14 @@ function collectEmbed(){
 
 const fields=[];
 
-document.querySelectorAll("#fieldsContainer .field-box").forEach(box=>{
+document.querySelectorAll("#fieldsContainer > .field-box").forEach(box=>{
 
-const name=box.querySelector(".field-name").value.trim();
-const value=box.querySelector(".field-value").value.trim();
+const nameInput=box.querySelector(".field-name");
+const valueInput=box.querySelector(".field-value");
+if(!nameInput || !valueInput)return;
+
+const name=nameInput.value.trim();
+const value=valueInput.value.trim();
 
 if(!name && !value)return;
 
@@ -633,10 +637,14 @@ $("previewEmbed").style.borderRightColor="transparent";
 const fieldsContainer=$("previewFields");
 fieldsContainer.replaceChildren();
 
-document.querySelectorAll("#fieldsContainer .field-box").forEach(box=>{
+document.querySelectorAll("#fieldsContainer > .field-box").forEach(box=>{
 
-const name=box.querySelector(".field-name").value.trim();
-const value=box.querySelector(".field-value").value.trim();
+const nameInput=box.querySelector(".field-name");
+const valueInput=box.querySelector(".field-value");
+if(!nameInput || !valueInput)return;
+
+const name=nameInput.value.trim();
+const value=valueInput.value.trim();
 
 if(!name&&!value)return;
 
