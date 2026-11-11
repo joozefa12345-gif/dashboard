@@ -148,36 +148,77 @@ async function getValidSession(req, res) {
         return null;
     }
 
+    const userId = session.user.id;
+
     if (session.tokenExpiresAt <= Date.now() + 60000) {
         if (!session.refreshToken) return null;
 
-        const refreshToken = decryptToken(session.refreshToken);
+        // Prevent simultaneous refresh requests
+        if (refreshLocks.has(userId)) {
+            await refreshLocks.get(userId);
 
-        const response = await discordFetch("/oauth2/token", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
-                grant_type: "refresh_token",
-                refresh_token: refreshToken
-            })
-        });
+            const updatedSession = readCookie(req);
 
-        const refreshed = await response.json();
+            if (!updatedSession?.user || !updatedSession.accessToken) {
+                return null;
+            }
 
-        if (!response.ok || !refreshed.access_token) {
-            return null;
+            if (updatedSession.tokenExpiresAt <= Date.now() + 60000) {
+                return null;
+            }
+
+            return {
+                session: updatedSession,
+                accessToken: decryptToken(updatedSession.accessToken)
+            };
         }
 
-        session.accessToken = encryptToken(refreshed.access_token);
-        session.refreshToken = encryptToken(refreshed.refresh_token);
-        session.tokenExpiresAt =
-            Date.now() + refreshed.expires_in * 1000;
+        const refreshPromise = (async () => {
+            const refreshToken = decryptToken(session.refreshToken);
 
-        setSessionCookie(res, session);
+            const response = await discordFetch("/oauth2/token", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET,
+                    grant_type: "refresh_token",
+                    refresh_token: refreshToken
+                })
+            });
+
+            const refreshed = await response.json();
+
+            if (!response.ok || !refreshed.access_token || !refreshed.refresh_token) {
+                throw new Error("Discord token refresh failed");
+            }
+
+            session.accessToken = encryptToken(refreshed.access_token);
+            session.refreshToken = encryptToken(refreshed.refresh_token);
+            session.tokenExpiresAt =
+                Date.now() + refreshed.expires_in * 1000;
+
+            return session;
+        })();
+
+        refreshLocks.set(userId, refreshPromise);
+
+        try {
+            const updatedSession = await refreshPromise;
+            setSessionCookie(res, updatedSession);
+
+            return {
+                session: updatedSession,
+                accessToken: decryptToken(updatedSession.accessToken)
+            };
+        } catch (error) {
+            console.error("Token refresh error:", error.message);
+            return null;
+        } finally {
+            refreshLocks.delete(userId);
+        }
     }
 
     return {
