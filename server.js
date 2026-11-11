@@ -155,22 +155,27 @@ async function getValidSession(req, res) {
 
         // Prevent simultaneous refresh requests
         if (refreshLocks.has(userId)) {
-            await refreshLocks.get(userId);
+    try {
+        const updatedSession = await refreshLocks.get(userId);
 
-            const updatedSession = readCookie(req);
+        if (!updatedSession?.user || !updatedSession.accessToken) {
+            return null;
+        }
 
-            if (!updatedSession?.user || !updatedSession.accessToken) {
-                return null;
-            }
+        if (updatedSession.tokenExpiresAt <= Date.now() + 60000) {
+            return null;
+        }
 
-            if (updatedSession.tokenExpiresAt <= Date.now() + 60000) {
-                return null;
-            }
+        setSessionCookie(res, updatedSession);
 
-            return {
-                session: updatedSession,
-                accessToken: decryptToken(updatedSession.accessToken)
-            };
+        return {
+            session: updatedSession,
+            accessToken: decryptToken(updatedSession.accessToken)
+        };
+    } catch (error) {
+        console.error("Waiting for token refresh failed:", error.message);
+        return null;
+    }
         }
 
         const refreshPromise = (async () => {
