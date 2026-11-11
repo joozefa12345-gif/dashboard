@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rumble System | Ticket Panel Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070d18;color:#fff;font-family:Cairo,sans-serif}
+header{background:#101a2b;border-bottom:1px solid #258cff;padding:20px;text-align:center;box-shadow:0 3px 20px #258cff22}
+header h1{margin:0;color:#258cff;font-size:25px}header p{color:#a9bdd5;margin:7px 0}
+#language{background:#101a2b;color:#fff;border:1px solid #258cff;border-radius:9px;padding:9px;font-family:Cairo}
+.wrap{max-width:1200px;margin:28px auto;padding:14px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h2{color:#64b5ff;margin:0 0 15px}.muted,.note{color:#9db6d1;font-size:13px;line-height:1.8}
+button,.back{border:0;border-radius:10px;padding:11px 17px;background:linear-gradient(135deg,#258cff,#0755b8);color:#fff;font-family:Cairo;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
+button:disabled{opacity:.45;cursor:not-allowed}.secondary{background:#17375d}.danger{background:#a52c42}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}.card{background:linear-gradient(145deg,#101a2b,#080f1c);border:1px solid #24466d;border-radius:16px;padding:20px;min-width:0}
+label{display:block;margin:13px 0 6px;color:#c9dfff;font-weight:700}input,textarea,select{width:100%;padding:11px;border-radius:9px;border:1px solid #24466d;background:#080f1c;color:#fff;font-family:Cairo;outline:none}
+input:focus,textarea:focus,select:focus{border-color:#258cff}textarea{min-height:85px;resize:vertical}input[type=color]{height:46px;padding:4px}input[type=file]{font-size:13px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{background:#080f1c;border:1px solid #24466d;border-radius:9px;padding:11px;margin-top:12px;color:#9dcaff;white-space:pre-wrap}
+.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:18px}.item{background:#0b1525;border:1px solid #24466d;border-radius:12px;padding:15px}.item h3{margin:0 0 5px;color:#64b5ff;overflow-wrap:anywhere}.item-actions{display:flex;gap:6px;margin-top:10px}.item-actions button{flex:1;padding:8px}
+.hidden{display:none!important}.editor-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.preview{background:#313338;border-radius:12px;padding:16px}.discord-card{background:#2b2d31;border-right:5px solid #258cff;border-radius:5px;padding:14px;overflow-wrap:anywhere}
+.discord-card h3{margin:0 0 8px}.discord-card p{white-space:pre-wrap;color:#dbdee1}.discord-card img{max-width:100%;max-height:220px;object-fit:contain;border-radius:8px}
+.preview-under{margin:9px 0;padding:10px;border-radius:7px;color:#fff;white-space:pre-wrap}
+.preview-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.preview-buttons span{padding:7px 12px;border-radius:7px;color:#fff;font-size:13px}
+.role-select{min-height:130px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.small{font-size:12px;color:#9db6d1}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.wrap{margin:14px auto}.card{padding:15px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>🎫 Rumble Ticket Panel Studio</h1><p>أنشئ لوحات فتح التكتات وخصصها لكل سيرفر</p><select id="language"><option value="ar">🇪🇬 العربية</option><option value="en">🇺🇸 English</option><option value="fr">🇫🇷 Français</option><option value="de">🇩🇪 Deutsch</option><option value="es">🇪🇸 Español</option></select></header>
+<main class="wrap">
+<div id="listView">
+<div class="topbar"><div><h2>🎟️ لوحات التكتات</h2><div class="muted" id="countText">0 / 5 Panels</div></div><button id="addPanel">➕ Add Panel</button></div>
+<div class="note">كل لوحة لها إعداداتها المستقلة. افتح لوحة واحدة للتعديل بدل عرض كل الإعدادات مرة واحدة.</div>
+<div id="panelList" class="list"></div><div id="listStatus" class="status">جارٍ تحميل اللوحات...</div>
+<a class="back" id="backLink">← العودة إلى لوحة السيرفر</a>
+</div>
+<div id="editorView" class="hidden">
+<div class="editor-head"><div><h2 id="editorHeading">إنشاء Panel جديدة</h2><div class="muted">خصص اللافتة ورسائل وأزرار التكت من هنا.</div></div><button class="secondary" id="backToList">← كل اللوحات</button></div>
+<div class="grid">
+<section class="card">
+<h2>⚙️ إعدادات اللوحة</h2>
+<label>اسم اللوحة في الداشبورد</label><input id="panelName" maxlength="80" placeholder="مثال: الدعم الفني">
+<label>الروم اللي اللافتة هتتبعت فيه</label><select id="panelChannel"><option value="">تحميل الرومات...</option></select>
+<label>Category اللي التكت هيتفتح جواها</label><select id="ticketCategory"><option value="">اختر Category</option></select>
+<label>روم إرسال Transcript</label><select id="transcriptChannel"><option value="">اختر روم Transcript</option></select>
+<label>رتب الدعم المسؤولة (تقدر تختار أكتر من رتبة)</label><select id="supportRoles" class="role-select" multiple><option>تحميل الرتب...</option></select><div class="small">على الموبايل اضغط مطولًا لاختيار أكثر من رتبة.</div>
+<hr style="border:0;border-top:1px solid #24466d;margin:20px 0">
+<h2>🪧 تصميم اللافتة</h2>
+<label>عنوان اللافتة</label><input id="panelTitle" maxlength="256" placeholder="افتح تذكرة للدعم الفني">
+<label>وصف اللافتة</label><textarea id="panelDescription" maxlength="4000" placeholder="اضغط على الزر بالأسفل لفتح تذكرة جديدة."></textarea>
+<div class="row"><div><label>لون اللافتة</label><input type="color" id="panelColor" value="#258cff"></div><div><label>لون الرسالة تحت اللافتة</label><select id="underMessageColor"><option value="#e74c3c">أحمر</option><option value="#7f8c8d">رصاصي</option><option value="#258cff" selected>أزرق</option><option value="#2ecc71">أخضر</option></select></div></div>
+<label>صورة اللافتة (رابط)</label><input id="panelImageUrl" type="url" placeholder="https://example.com/image.png">
+<label>أو ارفع صورة من جهازك</label><input id="panelImageFile" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+<label>الكلام المكتوب في زر فتح التكت</label><input id="buttonLabel" maxlength="80" value="🎫 فتح تذكرة">
+<label>الرسالة اللي تظهر تحت اللافتة</label><textarea id="underMessage" maxlength="1500" placeholder="يسعدنا مساعدتك، برجاء فتح تذكرة وسنرد عليك قريبًا."></textarea>
+<hr style="border:0;border-top:1px solid #24466d;margin:20px 0">
+<h2>👋 رسالة الترحيب داخل التكت</h2><textarea id="welcomeMessage" maxlength="2000" placeholder="أهلًا بك {user}، فريق الدعم هيساعدك في أقرب وقت."></textarea><div class="small">تقدر تستخدم {user} للإشارة لصاحب التكت و {support} لمنشن رتب الدعم.</div>
+<hr style="border:0;border-top:1px solid #24466d;margin:20px 0">
+<h2>🎛️ أزرار التحكم داخل التكت</h2>
+<div class="row"><div><label>اسم زر الاستلام</label><input id="claimLabel" maxlength="80" value="استلام"></div><div><label>لون زر الاستلام</label><input type="color" id="claimColor" value="#2ecc71"></div></div>
+<div class="row"><div><label>اسم زر القفل</label><input id="closeLabel" maxlength="80" value="قفل التكت"></div><div><label>لون زر القفل</label><input type="color" id="closeColor" value="#e74c3c"></div></div>
+<div class="row"><div><label>اسم زر Transcript</label><input id="transcriptLabel" maxlength="80" value="Transcript"></div><div><label>لون زر Transcript</label><input type="color" id="transcriptColor" value="#258cff"></div></div>
+<div class="actions"><button id="savePanel">💾 حفظ اللوحة</button><button id="cancelEdit" class="secondary">إلغاء</button></div>
+<div id="editorStatus" class="status hidden"></div>
+</section>
+<section class="card">
+<h2>👁️ معاينة اللافتة</h2><div class="preview"><div class="discord-card" id="previewCard"><h3 id="previewTitle">افتح تذكرة للدعم الفني</h3><p id="previewDescription">اضغط على الزر بالأسفل لفتح تذكرة جديدة.</p><img id="previewImage" class="hidden"><div class="preview-buttons"><span id="previewOpenButton" style="background:#258cff">🎫 فتح تذكرة</span></div></div><div class="preview-under" id="previewUnder" style="background:#258cff">يسعدنا مساعدتك، برجاء فتح تذكرة وسنرد عليك قريبًا.</div></div>
+<h2 style="margin-top:24px">معاينة أزرار التكت</h2><div class="preview"><div class="preview-buttons"><span id="previewClaim" style="background:#2ecc71">استلام</span><span id="previewClose" style="background:#e74c3c">قفل التكت</span><span id="previewTranscript" style="background:#258cff">Transcript</span></div></div>
+<h2 style="margin-top:24px">معاينة رسالة الترحيب</h2><div class="preview"><div class="discord-card"><p id="previewWelcome">أهلًا بك {user}، فريق الدعم هيساعدك في أقرب وقت.</p></div></div>
+<p class="note">المعاينة بتتحدث تلقائيًا أثناء التعديل. حفظ الإعدادات لا ينشر اللافتة ولا يفعّل أزرار البوت حتى تكتمل مرحلة ربط البوت.</p>
+</section>
+</div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const guildId=new URLSearchParams(location.search).get("guild");
+let panels=[],editingId=null,channels=[],categories=[],roles=[],uploadedImageUrl="";
+const defaults={panelTitle:"افتح تذكرة للدعم الفني",panelDescription:"اضغط على الزر بالأسفل لفتح تذكرة جديدة.",panelColor:"#258cff",underMessageColor:"#258cff",panelImageUrl:"",buttonLabel:"🎫 فتح تذكرة",underMessage:"يسعدنا مساعدتك، برجاء فتح تذكرة وسنرد عليك قريبًا.",welcomeMessage:"أهلًا بك {user}، فريق الدعم هيساعدك في أقرب وقت.",claimLabel:"استلام",claimColor:"#2ecc71",closeLabel:"قفل التكت",closeColor:"#e74c3c",transcriptLabel:"Transcript",transcriptColor:"#258cff",supportRoleIds:[]};
+const fieldIds=["panelChannel","ticketCategory","transcriptChannel","panelTitle","panelDescription","panelColor","underMessageColor","panelImageUrl","buttonLabel","underMessage","welcomeMessage","claimLabel","claimColor","closeLabel","closeColor","transcriptLabel","transcriptColor"];
+function status(id,msg,show=true){$(id).textContent=msg;$(id).classList.toggle("hidden",!show)}
+async function api(url,options={}){const r=await fetch(url,{...options,credentials:"same-origin",cache:"no-store",headers:{...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||d.error||"حدث خطأ");return d}
+function setOptions(el,items,placeholder){el.replaceChildren(new Option(placeholder,""));items.forEach(x=>el.add(new Option(x.name,x.id)))}
+async function loadChoices(){const [ch,ro]=await Promise.all([api("/api/guilds/"+guildId+"/channels"),api("/api/guilds/"+guildId+"/roles")]);channels=ch.channels||[];categories=ch.categories||[];roles=ro.roles||[];setOptions($("panelChannel"),channels,"اختر روم اللافتة");setOptions($("transcriptChannel"),channels,"اختر روم Transcript");setOptions($("ticketCategory"),categories,"اختر Category التكتات");$("supportRoles").replaceChildren();roles.forEach(r=>$("supportRoles").add(new Option(r.name,r.id)))}
+function collect(){const d={};fieldIds.forEach(id=>d[id]= $(id).value);d.supportRoleIds=[...$("supportRoles").selectedOptions].map(o=>o.value);return d}
+function fill(d={}){const x={...defaults,...d};fieldIds.forEach(id=>$(id).value=x[id]||"");[...$("supportRoles").options].forEach(o=>o.selected=(x.supportRoleIds||[]).includes(o.value));uploadedImageUrl=x.panelImageUrl||"";updatePreview()}
+function updatePreview(){$("previewTitle").textContent=$("panelTitle").value;$("previewDescription").textContent=$("panelDescription").value;$("previewCard").style.borderColor=$("panelColor").value;$("previewOpenButton").textContent=$("buttonLabel").value;$("previewOpenButton").style.background=$("panelColor").value;$("previewUnder").textContent=$("underMessage").value;$("previewUnder").style.background=$("underMessageColor").value;$("previewWelcome").textContent=$("welcomeMessage").value;$("previewClaim").textContent=$("claimLabel").value;$("previewClaim").style.background=$("claimColor").value;$("previewClose").textContent=$("closeLabel").value;$("previewClose").style.background=$("closeColor").value;$("previewTranscript").textContent=$("transcriptLabel").value;$("previewTranscript").style.background=$("transcriptColor").value;const url=$("panelImageUrl").value;const img=$("previewImage");if(url){img.src=url;img.classList.remove("hidden")}else img.classList.add("hidden")}
+function openEditor(panel=null){editingId=panel?.id||null;$("editorHeading").textContent=panel?"تعديل Panel":"إنشاء Panel جديدة";$("listView").classList.add("hidden");$("editorView").classList.remove("hidden");$("panelName").value=panel?.panel_name||"";fill(panel?.panel_data||defaults);$("panelImageFile").value="";status("editorStatus","",false)}
+function showList(){$("editorView").classList.add("hidden");$("listView").classList.remove("hidden");editingId=null;renderList()}
+function renderList(){const list=$("panelList");list.replaceChildren();$("countText").textContent=panels.length+" / 5 Panels";$("addPanel").disabled=panels.length>=5;if(!panels.length){const p=document.createElement("div");p.className="item muted";p.textContent="لسه مفيش Panels. اضغط Add Panel لإنشاء أول لوحة.";list.append(p)}panels.forEach(p=>{const box=document.createElement("div");box.className="item";const h=document.createElement("h3");h.textContent=p.panel_name;const desc=document.createElement("div");desc.className="muted";desc.textContent=p.panel_data?.panelTitle||"Ticket Panel";const actions=document.createElement("div");actions.className="item-actions";const edit=document.createElement("button");edit.textContent="تعديل";edit.onclick=()=>openEditor(p);const del=document.createElement("button");del.className="danger";del.textContent="حذف";del.onclick=()=>deletePanel(p);actions.append(edit,del);box.append(h,desc,actions);list.append(box)});status("listStatus","تم تحميل "+panels.length+" من 5 Panels.",true)}
+async function loadPanels(){status("listStatus","جارٍ تحميل اللوحات...");const d=await api("/api/guilds/"+guildId+"/ticket-panels");panels=d.panels||[];renderList()}
+async function deletePanel(p){if(!confirm("متأكد إنك عايز تحذف "+p.panel_name+"؟"))return;try{await api("/api/guilds/"+guildId+"/ticket-panels/"+p.id,{method:"DELETE"});await loadPanels()}catch(e){status("listStatus",e.message)}}
+async function savePanel(){const name=$("panelName").value.trim();const data=collect();if(!name)return status("editorStatus","اكتب اسم اللوحة الأول.");if(!data.panelChannelId||!data.ticketCategory||!data.transcriptChannel||!data.supportRoleIds.length)return status("editorStatus","اختار روم اللافتة وCategory التكت وروم Transcript ورتبة دعم واحدة على الأقل.");const file=$("panelImageFile").files[0];if(file){try{status("editorStatus","جارٍ رفع الصورة...");const response=await fetch("/api/guilds/"+guildId+"/images",{method:"POST",credentials:"same-origin",headers:{"Content-Type":file.type},body:file});const result=await response.json();if(!response.ok)throw new Error(result.message||"فشل رفع الصورة");data.panelImageUrl=result.image.url;$("panelImageUrl").value=data.panelImageUrl}catch(e){return status("editorStatus",e.message)}}const payload={panel_name:name,panel_data:data};try{status("editorStatus","جارٍ حفظ اللوحة...");const url="/api/guilds/"+guildId+"/ticket-panels"+(editingId?"/"+editingId:"");const result=await api(url,{method:editingId?"PUT":"POST",body:JSON.stringify(payload)});if(editingId)panels=panels.map(p=>p.id===editingId?result.panel:p);else panels.unshift(result.panel);renderList();showList()}catch(e){status("editorStatus",e.message)}}
+$("addPanel").onclick=()=>{if(panels.length>=5)return;openEditor()};$("backToList").onclick=showList;$("cancelEdit").onclick=showList;$("savePanel").onclick=savePanel;
+fieldIds.forEach(id=>$(id).addEventListener("input",updatePreview));$("supportRoles").addEventListener("change",updatePreview);
+$("panelImageFile").addEventListener("change",()=>{const f=$("panelImageFile").files[0];if(f){const url=URL.createObjectURL(f);$("previewImage").src=url;$("previewImage").classList.remove("hidden")}});
+$("backLink").href="/server.html?guild="+encodeURIComponent(guildId||"");
+$("language").value=localStorage.getItem("rumbleLanguage")||"ar";$("language").onchange=e=>{localStorage.setItem("rumbleLanguage",e.target.value);alert("تغيير اللغة العام سيكتمل في تحديث لاحق.");};
+(async()=>{if(!guildId||!/^\d{17,20}$/.test(guildId)){status("listStatus","رابط السيرفر غير صالح.");$("addPanel").disabled=true;return}try{await loadChoices();await loadPanels()}catch(e){status("listStatus",e.message)}})();
+</script>
+</body></html>
