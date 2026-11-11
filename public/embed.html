@@ -418,6 +418,7 @@ let temporaryThumbnail = "";
 let channelRequest = false;
 let saving = false;
 let sending = false;
+let pendingImageUploads = [];
 
 let imageObjectURL = null;
 let thumbnailObjectURL = null;
@@ -911,6 +912,12 @@ showStatus("editorStatus",t("saving"));
 
 const name=$("embedName").value.trim() || "Untitled Embed";
 
+const uploads = pendingImageUploads.splice(0);
+const uploadResults = await Promise.all(uploads);
+if(uploadResults.some(result => result === false)){
+  throw new Error(t("imageError"));
+}
+
 const embed=collectEmbed();
 
 const url=editingId
@@ -1124,12 +1131,12 @@ async function uploadSelectedImage(file, inputId, urlId, kind){
   if(!allowedTypes.includes(file.type)){
     alert(t("invalidImage"));
     $(inputId).value="";
-    return;
+    return false;
   }
   if(file.size>4*1024*1024){
     alert(t("imageTooLarge"));
     $(inputId).value="";
-    return;
+    return false;
   }
 
   const urlInput=$(urlId);
@@ -1163,19 +1170,22 @@ async function uploadSelectedImage(file, inputId, urlId, kind){
       }
       safePreview();
       showStatus("editorStatus",t("imageUploaded"));
+      return true;
     }
+    return false;
   }catch(error){
     showStatus("editorStatus",error.message);
+    return false;
   }
 }
 
 // Upload main image and thumbnail, preserving manual URL entry.
 $("embedImage").addEventListener("change",event=>{
-  uploadSelectedImage(event.target.files[0],"embedImage","imageUrl","main");
+  pendingImageUploads.push(uploadSelectedImage(event.target.files[0],"embedImage","imageUrl","main"));
 });
 
 $("embedThumbnail").addEventListener("change",event=>{
-  uploadSelectedImage(event.target.files[0],"embedThumbnail","thumbnailUrl","thumbnail");
+  pendingImageUploads.push(uploadSelectedImage(event.target.files[0],"embedThumbnail","thumbnailUrl","thumbnail"));
 });
 
 // A manually entered URL takes priority over any local temporary preview.
