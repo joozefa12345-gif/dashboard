@@ -1222,7 +1222,7 @@ app.post("/api/guilds/:guildId/ticket-panels", async (req, res) => {
 
 app.put("/api/guilds/:guildId/ticket-panels/:panelId", async (req, res) => {
   const { guildId, panelId } = req.params;
-  if (!validSnowflake(guildId) || !/^\\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id" });
+  if (!validSnowflake(guildId) || !/^\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id" });
   try {
     const access = await getGuildAuthorization(req, res, guildId);
     if (!access) return;
@@ -1246,7 +1246,7 @@ app.put("/api/guilds/:guildId/ticket-panels/:panelId", async (req, res) => {
 
 app.delete("/api/guilds/:guildId/ticket-panels/:panelId", async (req, res) => {
   const { guildId, panelId } = req.params;
-  if (!validSnowflake(guildId) || !/^\\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id" });
+  if (!validSnowflake(guildId) || !/^\d{1,20}$/.test(panelId)) return res.status(400).json({ error: "invalid_id" });
   try {
     const access = await getGuildAuthorization(req, res, guildId);
     if (!access) return;
