@@ -587,56 +587,70 @@ return embed;
 
 function updatePreview(){
 
-const embed=collectEmbed();
+const title=$("embedTitle").value.trim();
+const description=$("embedDescription").value.trim();
+const footer=$("embedFooter").value.trim();
+const color=$("embedColor").value;
 
-$("previewEmbedTitle").textContent=embed.title || "";
-$("previewEmbedDescription").textContent=embed.description || "";
-$("previewFooter").textContent=embed.footer?.text || "";
+$("previewEmbedTitle").textContent=title;
+$("previewEmbedDescription").textContent=description;
+$("previewFooter").textContent=footer;
 
-const color=intToHex(embed.color);
+if(document.documentElement.dir==="rtl"){
+$("previewEmbed").style.borderRightColor=color;
+$("previewEmbed").style.borderLeftColor="transparent";
+}else{
+$("previewEmbed").style.borderLeftColor=color;
+$("previewEmbed").style.borderRightColor="transparent";
+}
 
-$("previewEmbed").style.borderRightColor=
-document.documentElement.dir==="rtl"?color:"transparent";
+const fieldsContainer=$("previewFields");
+fieldsContainer.replaceChildren();
 
-$("previewEmbed").style.borderLeftColor=
-document.documentElement.dir==="ltr"?color:"transparent";
+document.querySelectorAll("#fieldsContainer .field-box").forEach(box=>{
+
+const name=box.querySelector(".field-name").value.trim();
+const value=box.querySelector(".field-value").value.trim();
+
+if(!name&&!value)return;
+
+const field=document.createElement("div");
+field.className="embed-field";
+
+const strong=document.createElement("strong");
+strong.textContent=name;
+
+const paragraph=document.createElement("p");
+paragraph.textContent=value;
+
+field.append(strong,paragraph);
+fieldsContainer.appendChild(field);
+
+});
 
 const image=$("previewImage");
+const imageSource=temporaryImage || $("imageUrl").value.trim();
 
-const imageSource=temporaryImage || embed.image?.url || "";
+if(imageSource){
+image.src=imageSource;
+image.style.display="block";
+}else{
+image.removeAttribute("src");
+image.style.display="none";
+}
 
-function updatePreview(){
-  const title = $("embedTitle").value;
-  const description = $("embedDescription").value;
-  const color = $("embedColor").value;
+const thumbnail=$("previewThumbnail");
+thumbnail.replaceChildren();
 
-  $("previewTitle").textContent = title;
-  $("previewDescription").textContent = description;
+const thumbnailSource=temporaryThumbnail || $("thumbnailUrl").value.trim();
 
-  $("previewEmbed").style.borderColor = color;
+if(thumbnailSource){
+const img=document.createElement("img");
+img.src=thumbnailSource;
+img.alt="";
+thumbnail.appendChild(img);
+}
 
-  const fieldsContainer = $("previewFields");
-  fieldsContainer.innerHTML = "";
-
-  document.querySelectorAll(".field-item").forEach(item => {
-    const name = item.querySelector(".field-name").value;
-    const value = item.querySelector(".field-value").value;
-
-    if (!name && !value) return;
-
-    const field = document.createElement("div");
-    field.className = "preview-field";
-
-    const fieldName = document.createElement("strong");
-    fieldName.textContent = name;
-
-    const fieldValue = document.createElement("p");
-    fieldValue.textContent = value;
-
-    field.appendChild(fieldName);
-    field.appendChild(fieldValue);
-    fieldsContainer.appendChild(field);
-  });
 }
 function safePreview(){
 
