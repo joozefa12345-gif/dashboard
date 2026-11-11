@@ -902,32 +902,17 @@ list.appendChild(box);
 
 }
 
-async function saveEmbed(){
+async function persistCurrentEmbed(){
+if(!guildId)throw new Error(t("noGuild"));
 
-if(saving)return;
-
-saving=true;
-
-$("saveButton").disabled=true;
-
-try{
-
-if(!guildId){
-throw new Error(t("noGuild"));
+const uploads=pendingImageUploads.splice(0);
+const uploadResults=await Promise.all(uploads);
+if(uploadResults.some(result=>result===false)){
+throw new Error(t("imageError"));
 }
-
-showStatus("editorStatus",t("saving"));
 
 const name=$("embedName").value.trim() || "Untitled Embed";
-
-const uploads = pendingImageUploads.splice(0);
-const uploadResults = await Promise.all(uploads);
-if(uploadResults.some(result => result === false)){
-  throw new Error(t("imageError"));
-}
-
 const embed=collectEmbed();
-
 const url=editingId
 ? `/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}`
 : `/api/guilds/${encodeURIComponent(guildId)}/embeds`;
@@ -937,27 +922,28 @@ method:editingId?"PUT":"POST",
 body:JSON.stringify({name,embed})
 });
 
-if(data.embed?.id){
-editingId=String(data.embed.id);
-}
-
-$("saveButton").textContent=t("edit");
+if(data.embed?.id)editingId=String(data.embed.id);
+if(!editingId)throw new Error(t("failed"));
 
 await loadSaved();
-
-showStatus("editorStatus",t("savedOk"));
-
-}catch(error){
-
-showStatus("editorStatus",error.message);
-
-}finally{
-
-saving=false;
-$("saveButton").disabled=false;
-
+return editingId;
 }
 
+async function saveEmbed(){
+if(saving)return;
+saving=true;
+$("saveButton").disabled=true;
+try{
+showStatus("editorStatus",t("saving"));
+await persistCurrentEmbed();
+$("saveButton").textContent=t("edit");
+showStatus("editorStatus",t("savedOk"));
+}catch(error){
+showStatus("editorStatus",error.message);
+}finally{
+saving=false;
+$("saveButton").disabled=false;
+}
 }
 
 async function deleteEmbed(id){
@@ -1060,27 +1046,20 @@ sendButton.disabled=select.disabled;
 }
 
 async function sendEmbed(){
-
-if(sending)return;
-
+if(sending || saving)return;
 sending=true;
-
 $("sendButton").disabled=true;
-
 try{
-
-if(!editingId){
-throw new Error(t("saveFirst"));
-}
+if(!guildId)throw new Error(t("noGuild"));
 
 const channelId=$("channelSelect").value;
+if(!channelId)throw new Error(t("chooseChannel"));
 
-if(!channelId){
-throw new Error(t("chooseChannel"));
-}
+showStatus("sendStatus",t("saving"));
+await persistCurrentEmbed();
+$("saveButton").textContent=t("edit");
 
 showStatus("sendStatus",t("sending"));
-
 await api(
 `/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}/send`,
 {
@@ -1090,22 +1069,13 @@ body:JSON.stringify({channelId})
 );
 
 showStatus("sendStatus",t("sentOk"));
-
 }catch(error){
-
 showStatus("sendStatus",error.message);
-
 }finally{
-
 sending=false;
-
-$("sendButton").disabled=
-!$("channelSelect").value;
-
+$("sendButton").disabled=!$("channelSelect").value;
 }
-
 }
-
 
 
 // Live preview
