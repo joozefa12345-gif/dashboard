@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#070d18;color:white;font-family:Cairo,sans-serif}
-header{background:#101a2b;border-bottom:1px solid #258cff;padding:20px;text-align:center;box-shadow:0 3px 20px rgba(37,140,255,.15)}
+header{background:#101a2b;border-bottom:1px solid #258cff;padding:20px;text-align:center;box-shadow:0 3px 20px #258cff22}
 header h1{color:#258cff;margin:0;font-size:25px}
 header p{margin:8px 0;color:#aaa}
 #language{background:#101a2b;color:white;border:1px solid #258cff;border-radius:9px;padding:9px;font-family:Cairo;margin-top:10px}
@@ -23,8 +23,8 @@ textarea{resize:vertical;min-height:100px}
 input[type=color]{height:48px;padding:4px;cursor:pointer}
 input[type=file]{font-size:13px}
 button{border:none;border-radius:9px;padding:11px 16px;background:linear-gradient(135deg,#258cff,#0755b8);color:white;font-family:Cairo;font-weight:bold;cursor:pointer;margin:5px 3px}
-button:hover{box-shadow:0 0 15px rgba(37,140,255,.4)}
-button:disabled{opacity:.5;cursor:not-allowed}
+button:hover{box-shadow:0 0 15px #258cff66}
+button:disabled{opacity:.45;cursor:not-allowed}
 .danger{background:#a52c42}
 .secondary{background:#17375d}
 .field-box{background:#080f1c;border:1px solid #24466d;padding:14px;border-radius:10px;margin-top:12px}
@@ -34,7 +34,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .avatar{width:42px;height:42px;border-radius:50%;background:#258cff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .message-content{min-width:0;width:100%}
 .username{font-weight:bold;margin-bottom:8px}
-.embed{background:#2b2d31;border-left:5px solid #258cff;border-radius:5px;padding:15px;max-width:100%;overflow-wrap:anywhere}
+.embed{background:#2b2d31;border-left:5px solid #258cff;border-radius:5px;padding:15px;max-width:100%;overflow-wrap:anywhere;min-height:30px}
 [dir=rtl] .embed{border-left:none;border-right:5px solid #258cff}
 #previewThumbnail{float:right;width:80px;height:80px;margin:0 0 10px 12px}
 #previewThumbnail:empty{display:none}
@@ -42,7 +42,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .embed h3{margin:0 0 10px;color:white}
 .embed p{color:#dbdee1;white-space:pre-wrap;overflow-wrap:anywhere}
 #previewFields{clear:both}
-#previewImage{max-width:100%;border-radius:7px;margin-top:12px}
+#previewImage{max-width:100%;max-height:400px;object-fit:contain;border-radius:7px;margin-top:12px}
 .embed-field{margin-top:15px}
 .embed-field strong{display:block;margin-bottom:4px}
 .embed-footer{font-size:12px;color:#aaa;margin-top:15px}
@@ -52,6 +52,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
 .actions button{flex:1}
 hr{border:0;border-top:1px solid #24466d;margin:22px 0}
+.channel-option{color:white}
 @media(max-width:750px){.container{grid-template-columns:1fr}}
 </style>
 </head>
@@ -73,16 +74,17 @@ hr{border:0;border-top:1px solid #24466d;margin:22px 0}
 <div class="container">
 
 <section class="panel">
+
 <h2 id="editorTitle">📝 إنشاء إيمبد جديد</h2>
 
 <label id="nameLabel">اسم التصميم</label>
 <input id="embedName" maxlength="100" placeholder="اسم الإيمبد">
 
 <label id="titleLabel">عنوان الإيمبد</label>
-<input id="embedTitle" maxlength="256" placeholder="اكتب عنوان الإيمبد...">
+<input id="embedTitle" maxlength="256">
 
 <label id="descriptionLabel">وصف الإيمبد</label>
-<textarea id="embedDescription" maxlength="4096" placeholder="اكتب محتوى الإيمبد هنا..."></textarea>
+<textarea id="embedDescription" maxlength="4096"></textarea>
 
 <label id="colorLabel">لون الإيمبد</label>
 <input type="color" id="embedColor" value="#258cff">
@@ -90,13 +92,13 @@ hr{border:0;border-top:1px solid #24466d;margin:22px 0}
 <label id="imageUrlLabel">رابط الصورة الرئيسية</label>
 <input id="imageUrl" type="url" placeholder="https://example.com/image.png">
 
-<label id="imageLabel">معاينة صورة من الجهاز (مؤقتة)</label>
+<label id="imageLabel">صورة من الجهاز (معاينة مؤقتة)</label>
 <input type="file" id="embedImage" accept="image/*">
 
 <label id="thumbnailUrlLabel">رابط الصورة المصغرة</label>
 <input id="thumbnailUrl" type="url" placeholder="https://example.com/image.png">
 
-<label id="thumbnailLabel">معاينة الصورة المصغرة من الجهاز (مؤقتة)</label>
+<label id="thumbnailLabel">الصورة المصغرة من الجهاز (مؤقتة)</label>
 <input type="file" id="embedThumbnail" accept="image/*">
 
 <h2 id="fieldsTitle" style="margin-top:25px">📋 حقول الإيمبد</h2>
@@ -104,7 +106,7 @@ hr{border:0;border-top:1px solid #24466d;margin:22px 0}
 <button id="addField">➕ إضافة حقل</button>
 
 <label id="footerLabel">النص السفلي</label>
-<input id="embedFooter" maxlength="2048" placeholder="Rumble System">
+<input id="embedFooter" maxlength="2048">
 
 <div class="actions">
 <button id="saveButton">💾 حفظ الإيمبد</button>
@@ -122,220 +124,282 @@ hr{border:0;border-top:1px solid #24466d;margin:22px 0}
 <hr>
 
 <h2 id="sendTitle">🚀 إرسال إلى Discord</h2>
+
 <label id="channelLabel">اختر روم الإرسال</label>
-<select id="channelSelect">
+
+<select id="channelSelect" disabled>
 <option value="">جارٍ تحميل الرومات...</option>
 </select>
-<button id="sendButton">🚀 إرسال الإيمبد المحدد</button>
+
+<button id="sendButton" disabled>🚀 إرسال الإيمبد المحدد</button>
+
 <div id="sendStatus" class="status" hidden></div>
+
 </section>
 
 <section class="panel">
+
 <h2 id="previewTitle">👁️ معاينة الإيمبد</h2>
 
 <div class="preview-area">
 <div class="discord-message">
+
 <div class="avatar">💙</div>
+
 <div class="message-content">
 <div class="username">Rumble System</div>
 
 <div class="embed" id="previewEmbed">
+
 <div id="previewThumbnail"></div>
 <h3 id="previewEmbedTitle"></h3>
 <p id="previewEmbedDescription"></p>
 <div id="previewFields"></div>
-<img id="previewImage" style="display:none">
-<div class="embed-footer" id="previewFooter"></div>
-</div>
 
+<img id="previewImage" style="display:none">
+
+<div class="embed-footer" id="previewFooter"></div>
+
+</div>
 </div>
 </div>
 </div>
 
 <a href="#" class="back-button" id="backButton">← العودة إلى لوحة السيرفر</a>
+
 <p class="note" id="previewNote">هذه معاينة مباشرة لشكل الإيمبد قبل إرساله.</p>
 <p class="note" id="generalNote">يجب تسجيل الدخول إلى Discord وامتلاك صلاحية إدارة السيرفر.</p>
-</section>
 
+</section>
 </div>
 
 <script>
 const translations = {
+
 ar:{
-subtitle:"منشئ رسائل الإيمبد الاحترافي",editor:"📝 إنشاء إيمبد جديد",
-name:"اسم التصميم",title:"عنوان الإيمبد",description:"وصف الإيمبد",
-color:"لون الإيمبد",image:"معاينة صورة من الجهاز (مؤقتة)",
-thumbnail:"معاينة الصورة المصغرة من الجهاز (مؤقتة)",
-imageUrl:"رابط الصورة الرئيسية",thumbnailUrl:"رابط الصورة المصغرة",
-fields:"📋 حقول الإيمبد",add:"➕ إضافة حقل",footer:"النص السفلي",
-preview:"👁️ معاينة الإيمبد",back:"← العودة إلى لوحة السيرفر",
-saved:"📂 الإيمبدات المحفوظة",refresh:"🔄 تحديث القائمة",
-send:"🚀 إرسال إلى Discord",channel:"اختر روم الإرسال",
-save:"💾 حفظ الإيمبد",new:"➕ تصميم جديد",sendButton:"🚀 إرسال الإيمبد المحدد",
-fieldName:"اسم الحقل",fieldValue:"محتوى الحقل",remove:"حذف الحقل",
-edit:"تعديل",delete:"حذف",loading:"جارٍ التحميل...",
-noGuild:"لم يتم تحديد سيرفر.",login:"يجب تسجيل الدخول أولًا.",
-loadError:"تعذر تحميل البيانات.",savedOk:"تم حفظ الإيمبد بنجاح.",
-updatedOk:"تم تحديث الإيمبد بنجاح.",deletedOk:"تم حذف الإيمبد.",
-sentOk:"تم إرسال الإيمبد بنجاح.",confirmDelete:"هل أنت متأكد من حذف هذا الإيمبد؟",
-chooseChannel:"اختر رومًا أولًا.",saveFirst:"احفظ الإيمبد أولًا قبل الإرسال.",
-empty:"لا توجد إيمبدات محفوظة حتى الآن.",newReady:"تم تجهيز تصميم جديد.",
+subtitle:"منشئ رسائل الإيمبد الاحترافي",
+editor:"📝 إنشاء إيمبد جديد",
+name:"اسم التصميم",title:"عنوان الإيمبد",
+description:"وصف الإيمبد",color:"لون الإيمبد",
+image:"صورة من الجهاز (مؤقتة)",
+thumbnail:"الصورة المصغرة من الجهاز (مؤقتة)",
+imageUrl:"رابط الصورة الرئيسية",
+thumbnailUrl:"رابط الصورة المصغرة",
+fields:"📋 حقول الإيمبد",add:"➕ إضافة حقل",
+footer:"النص السفلي",preview:"👁️ معاينة الإيمبد",
+back:"← العودة إلى لوحة السيرفر",
+saved:"📂 الإيمبدات المحفوظة",
+refresh:"🔄 تحديث القائمة",
+send:"🚀 إرسال إلى Discord",
+channel:"اختر روم الإرسال",
+save:"💾 حفظ الإيمبد",
+new:"➕ تصميم جديد",
+sendButton:"🚀 إرسال الإيمبد المحدد",
+fieldName:"اسم الحقل",fieldValue:"محتوى الحقل",
+remove:"حذف الحقل",edit:"تعديل",delete:"حذف",
+loading:"جارٍ التحميل...",
+noGuild:"لم يتم تحديد سيرفر.",
+login:"يجب تسجيل الدخول أولًا.",
+savedOk:"تم حفظ الإيمبد بنجاح.",
+updatedOk:"تم تحديث الإيمبد بنجاح.",
+deletedOk:"تم حذف الإيمبد.",
+sentOk:"تم إرسال الإيمبد بنجاح.",
+confirmDelete:"هل أنت متأكد من حذف هذا الإيمبد؟",
+chooseChannel:"اختر رومًا أولًا.",
+saveFirst:"احفظ الإيمبد أولًا قبل الإرسال.",
+empty:"لا توجد إيمبدات محفوظة.",
+newReady:"تم تجهيز تصميم جديد.",
 previewNote:"هذه معاينة مباشرة لشكل الإيمبد قبل إرساله.",
 generalNote:"يجب تسجيل الدخول إلى Discord وامتلاك صلاحية إدارة السيرفر.",
-invalidImage:"من فضلك اختر ملف صورة صحيحًا.",
-failed:"حدث خطأ. حاول مرة أخرى.",channelLoading:"جارٍ تحميل الرومات...",
-channelError:"تعذر تحميل الرومات."
+invalidImage:"اختر ملف صورة صحيحًا.",
+failed:"حدث خطأ. حاول مرة أخرى.",
+channelLoading:"جارٍ تحميل الرومات...",
+channelError:"تعذر تحميل الرومات.",
+noChannels:"لم يتم العثور على رومات.",
+sending:"جارٍ إرسال الإيمبد...",
+saving:"جارٍ حفظ الإيمبد...",
+timeout:"انتهت مهلة الاتصال. حاول مرة أخرى.",
+imageError:"تعذر تحميل الصورة."
 },
+
 en:{
-subtitle:"Professional Embed Builder",editor:"📝 Create New Embed",
-name:"Design Name",title:"Embed Title",description:"Embed Description",
-color:"Embed Color",image:"Local Image Preview (Temporary)",
+subtitle:"Professional Embed Builder",
+editor:"📝 Create New Embed",
+name:"Design Name",title:"Embed Title",
+description:"Embed Description",color:"Embed Color",
+image:"Local Image Preview (Temporary)",
 thumbnail:"Local Thumbnail Preview (Temporary)",
 imageUrl:"Main Image URL",thumbnailUrl:"Thumbnail URL",
-fields:"📋 Embed Fields",add:"➕ Add Field",footer:"Footer Text",
-preview:"👁️ Embed Preview",back:"← Back to Server Dashboard",
+fields:"📋 Embed Fields",add:"➕ Add Field",
+footer:"Footer Text",preview:"👁️ Embed Preview",
+back:"← Back to Server Dashboard",
 saved:"📂 Saved Embeds",refresh:"🔄 Refresh List",
 send:"🚀 Send to Discord",channel:"Choose Channel",
-save:"💾 Save Embed",new:"➕ New Design",sendButton:"🚀 Send Selected Embed",
-fieldName:"Field Name",fieldValue:"Field Content",remove:"Remove Field",
-edit:"Edit",delete:"Delete",loading:"Loading...",
-noGuild:"No server selected.",login:"Please login first.",
-loadError:"Could not load data.",savedOk:"Embed saved successfully.",
-updatedOk:"Embed updated successfully.",deletedOk:"Embed deleted.",
-sentOk:"Embed sent successfully.",confirmDelete:"Are you sure you want to delete this embed?",
-chooseChannel:"Choose a channel first.",saveFirst:"Save the embed before sending.",
-empty:"No saved embeds yet.",newReady:"New design is ready.",
+save:"💾 Save Embed",new:"➕ New Design",
+sendButton:"🚀 Send Selected Embed",
+fieldName:"Field Name",fieldValue:"Field Content",
+remove:"Remove Field",edit:"Edit",delete:"Delete",
+loading:"Loading...",noGuild:"No server selected.",
+login:"Please login first.",
+savedOk:"Embed saved successfully.",
+updatedOk:"Embed updated successfully.",
+deletedOk:"Embed deleted.",sentOk:"Embed sent successfully.",
+confirmDelete:"Are you sure you want to delete this embed?",
+chooseChannel:"Choose a channel first.",
+saveFirst:"Save the embed before sending.",
+empty:"No saved embeds yet.",
+newReady:"New design is ready.",
 previewNote:"Live preview of your embed before sending.",
-generalNote:"You must log in to Discord and have server management permissions.",
-invalidImage:"Please select a valid image file.",failed:"An error occurred. Try again.",
-channelLoading:"Loading channels...",channelError:"Could not load channels."
+generalNote:"Discord login and server management permissions are required.",
+invalidImage:"Please select a valid image.",
+failed:"An error occurred. Try again.",
+channelLoading:"Loading channels...",
+channelError:"Could not load channels.",
+noChannels:"No channels found.",
+sending:"Sending embed...",
+saving:"Saving embed...",
+timeout:"Connection timed out. Try again.",
+imageError:"Could not load image."
 },
+
 fr:{
-subtitle:"Créateur professionnel d'Embeds",editor:"📝 Créer un nouvel Embed",
-name:"Nom du design",title:"Titre de l'Embed",description:"Description de l'Embed",
-color:"Couleur de l'Embed",image:"Aperçu image local (temporaire)",
+subtitle:"Créateur professionnel d'Embeds",
+editor:"📝 Créer un nouvel Embed",
+name:"Nom du design",title:"Titre de l'Embed",
+description:"Description de l'Embed",
+color:"Couleur de l'Embed",
+image:"Aperçu image local (temporaire)",
 thumbnail:"Aperçu miniature local (temporaire)",
-imageUrl:"URL de l'image principale",thumbnailUrl:"URL de la miniature",
-fields:"📋 Champs de l'Embed",add:"➕ Ajouter un champ",footer:"Texte du pied de page",
-preview:"👁️ Aperçu de l'Embed",back:"← Retour au tableau de bord",
+imageUrl:"URL de l'image principale",
+thumbnailUrl:"URL de la miniature",
+fields:"📋 Champs de l'Embed",
+add:"➕ Ajouter un champ",footer:"Texte du pied de page",
+preview:"👁️ Aperçu de l'Embed",
+back:"← Retour au tableau de bord",
 saved:"📂 Embeds enregistrés",refresh:"🔄 Actualiser",
 send:"🚀 Envoyer à Discord",channel:"Choisir un salon",
-save:"💾 Enregistrer",new:"➕ Nouveau design",sendButton:"🚀 Envoyer l'Embed",
-fieldName:"Nom du champ",fieldValue:"Contenu du champ",remove:"Supprimer",
-edit:"Modifier",delete:"Supprimer",loading:"Chargement...",
-noGuild:"Aucun serveur sélectionné.",login:"Veuillez vous connecter.",
-loadError:"Impossible de charger les données.",savedOk:"Embed enregistré.",
-updatedOk:"Embed modifié.",deletedOk:"Embed supprimé.",
-sentOk:"Embed envoyé.",confirmDelete:"Voulez-vous vraiment supprimer cet Embed ?",
-chooseChannel:"Choisissez un salon.",saveFirst:"Enregistrez d'abord l'Embed.",
-empty:"Aucun Embed enregistré.",newReady:"Nouveau design prêt.",
-previewNote:"Aperçu en direct de votre Embed avant l'envoi.",
+save:"💾 Enregistrer",new:"➕ Nouveau design",
+sendButton:"🚀 Envoyer l'Embed",
+fieldName:"Nom du champ",fieldValue:"Contenu du champ",
+remove:"Supprimer",edit:"Modifier",delete:"Supprimer",
+loading:"Chargement...",noGuild:"Aucun serveur sélectionné.",
+login:"Veuillez vous connecter.",
+savedOk:"Embed enregistré.",updatedOk:"Embed modifié.",
+deletedOk:"Embed supprimé.",sentOk:"Embed envoyé.",
+confirmDelete:"Voulez-vous vraiment supprimer cet Embed ?",
+chooseChannel:"Choisissez un salon.",
+saveFirst:"Enregistrez d'abord l'Embed.",
+empty:"Aucun Embed enregistré.",
+newReady:"Nouveau design prêt.",
+previewNote:"Aperçu en direct avant l'envoi.",
 generalNote:"Connexion Discord et autorisation de gestion requises.",
-invalidImage:"Veuillez sélectionner une image valide.",failed:"Une erreur est survenue.",
-channelLoading:"Chargement des salons...",channelError:"Impossible de charger les salons."
+invalidImage:"Veuillez sélectionner une image valide.",
+failed:"Une erreur est survenue.",
+channelLoading:"Chargement des salons...",
+channelError:"Impossible de charger les salons.",
+noChannels:"Aucun salon trouvé.",
+sending:"Envoi en cours...",saving:"Enregistrement...",
+timeout:"Délai de connexion dépassé.",
+imageError:"Impossible de charger l'image."
 },
+
 de:{
-subtitle:"Professioneller Embed-Editor",editor:"📝 Neuen Embed erstellen",
-name:"Designname",title:"Embed-Titel",description:"Embed-Beschreibung",
-color:"Embed-Farbe",image:"Lokale Bildvorschau (temporär)",
+subtitle:"Professioneller Embed-Editor",
+editor:"📝 Neuen Embed erstellen",
+name:"Designname",title:"Embed-Titel",
+description:"Embed-Beschreibung",color:"Embed-Farbe",
+image:"Lokale Bildvorschau (temporär)",
 thumbnail:"Lokale Miniaturvorschau (temporär)",
 imageUrl:"Hauptbild-URL",thumbnailUrl:"Miniatur-URL",
-fields:"📋 Embed-Felder",add:"➕ Feld hinzufügen",footer:"Fußzeilentext",
-preview:"👁️ Embed-Vorschau",back:"← Zurück zum Server-Dashboard",
+fields:"📋 Embed-Felder",add:"➕ Feld hinzufügen",
+footer:"Fußzeilentext",preview:"👁️ Embed-Vorschau",
+back:"← Zurück zum Server-Dashboard",
 saved:"📂 Gespeicherte Embeds",refresh:"🔄 Aktualisieren",
 send:"🚀 An Discord senden",channel:"Kanal auswählen",
-save:"💾 Embed speichern",new:"➕ Neues Design",sendButton:"🚀 Embed senden",
-fieldName:"Feldname",fieldValue:"Feldinhalt",remove:"Entfernen",
-edit:"Bearbeiten",delete:"Löschen",loading:"Wird geladen...",
-noGuild:"Kein Server ausgewählt.",login:"Bitte zuerst anmelden.",
-loadError:"Daten konnten nicht geladen werden.",savedOk:"Embed gespeichert.",
-updatedOk:"Embed aktualisiert.",deletedOk:"Embed gelöscht.",
-sentOk:"Embed gesendet.",confirmDelete:"Möchtest du diesen Embed wirklich löschen?",
-chooseChannel:"Bitte einen Kanal auswählen.",saveFirst:"Bitte zuerst speichern.",
-empty:"Noch keine gespeicherten Embeds.",newReady:"Neues Design bereit.",
-previewNote:"Live-Vorschau deines Embeds vor dem Senden.",
-generalNote:"Discord-Anmeldung und Serververwaltungsrechte erforderlich.",
-invalidImage:"Bitte wähle eine gültige Bilddatei.",failed:"Ein Fehler ist aufgetreten.",
-channelLoading:"Kanäle werden geladen...",channelError:"Kanäle konnten nicht geladen werden."
+save:"💾 Embed speichern",new:"➕ Neues Design",
+sendButton:"🚀 Embed senden",
+fieldName:"Feldname",fieldValue:"Feldinhalt",
+remove:"Entfernen",edit:"Bearbeiten",delete:"Löschen",
+loading:"Wird geladen...",noGuild:"Kein Server ausgewählt.",
+login:"Bitte zuerst anmelden.",
+savedOk:"Embed gespeichert.",updatedOk:"Embed aktualisiert.",
+deletedOk:"Embed gelöscht.",sentOk:"Embed gesendet.",
+confirmDelete:"Möchtest du diesen Embed wirklich löschen?",
+chooseChannel:"Bitte einen Kanal auswählen.",
+saveFirst:"Bitte zuerst speichern.",
+empty:"Noch keine gespeicherten Embeds.",
+newReady:"Neues Design bereit.",
+previewNote:"Live-Vorschau vor dem Senden.",
+generalNote:"Discord-Anmeldung und Verwaltungsrechte erforderlich.",
+invalidImage:"Bitte wähle eine gültige Bilddatei.",
+failed:"Ein Fehler ist aufgetreten.",
+channelLoading:"Kanäle werden geladen...",
+channelError:"Kanäle konnten nicht geladen werden.",
+noChannels:"Keine Kanäle gefunden.",
+sending:"Embed wird gesendet...",saving:"Wird gespeichert...",
+timeout:"Zeitüberschreitung bei der Verbindung.",
+imageError:"Bild konnte nicht geladen werden."
 },
+
 es:{
-subtitle:"Creador profesional de Embeds",editor:"📝 Crear nuevo Embed",
-name:"Nombre del diseño",title:"Título del Embed",description:"Descripción del Embed",
-color:"Color del Embed",image:"Vista previa de imagen local (temporal)",
+subtitle:"Creador profesional de Embeds",
+editor:"📝 Crear nuevo Embed",
+name:"Nombre del diseño",title:"Título del Embed",
+description:"Descripción del Embed",color:"Color del Embed",
+image:"Vista previa de imagen local (temporal)",
 thumbnail:"Vista previa de miniatura local (temporal)",
-imageUrl:"URL de imagen principal",thumbnailUrl:"URL de miniatura",
-fields:"📋 Campos del Embed",add:"➕ Añadir campo",footer:"Texto del pie",
-preview:"👁️ Vista previa del Embed",back:"← Volver al panel del servidor",
+imageUrl:"URL de imagen principal",
+thumbnailUrl:"URL de miniatura",
+fields:"📋 Campos del Embed",add:"➕ Añadir campo",
+footer:"Texto del pie",preview:"👁️ Vista previa del Embed",
+back:"← Volver al panel del servidor",
 saved:"📂 Embeds guardados",refresh:"🔄 Actualizar",
 send:"🚀 Enviar a Discord",channel:"Elegir canal",
-save:"💾 Guardar Embed",new:"➕ Nuevo diseño",sendButton:"🚀 Enviar Embed",
-fieldName:"Nombre del campo",fieldValue:"Contenido del campo",remove:"Eliminar",
-edit:"Editar",delete:"Eliminar",loading:"Cargando...",
-noGuild:"No hay servidor seleccionado.",login:"Inicia sesión primero.",
-loadError:"No se pudieron cargar los datos.",savedOk:"Embed guardado.",
-updatedOk:"Embed actualizado.",deletedOk:"Embed eliminado.",
-sentOk:"Embed enviado.",confirmDelete:"¿Seguro que quieres eliminar este Embed?",
-chooseChannel:"Elige un canal primero.",saveFirst:"Guarda el Embed antes de enviarlo.",
-empty:"No hay Embeds guardados.",newReady:"Nuevo diseño listo.",
-previewNote:"Vista previa en directo de tu Embed antes de enviarlo.",
-generalNote:"Se requiere iniciar sesión y tener permisos de administración.",
-invalidImage:"Selecciona una imagen válida.",failed:"Ocurrió un error.",
-channelLoading:"Cargando canales...",channelError:"No se pudieron cargar los canales."
+save:"💾 Guardar Embed",new:"➕ Nuevo diseño",
+sendButton:"🚀 Enviar Embed",
+fieldName:"Nombre del campo",fieldValue:"Contenido del campo",
+remove:"Eliminar",edit:"Editar",delete:"Eliminar",
+loading:"Cargando...",noGuild:"No hay servidor seleccionado.",
+login:"Inicia sesión primero.",
+savedOk:"Embed guardado.",updatedOk:"Embed actualizado.",
+deletedOk:"Embed eliminado.",sentOk:"Embed enviado.",
+confirmDelete:"¿Seguro que quieres eliminar este Embed?",
+chooseChannel:"Elige un canal primero.",
+saveFirst:"Guarda el Embed antes de enviarlo.",
+empty:"No hay Embeds guardados.",
+newReady:"Nuevo diseño listo.",
+previewNote:"Vista previa en directo antes del envío.",
+generalNote:"Se requiere iniciar sesión y permisos de administración.",
+invalidImage:"Selecciona una imagen válida.",
+failed:"Ocurrió un error.",
+channelLoading:"Cargando canales...",
+channelError:"No se pudieron cargar los canales.",
+noChannels:"No se encontraron canales.",
+sending:"Enviando Embed...",saving:"Guardando...",
+timeout:"Tiempo de conexión agotado.",
+imageError:"No se pudo cargar la imagen."
 }
+
 };
 
-const guildId = new URLSearchParams(location.search).get("guild");
 const $ = id => document.getElementById(id);
+
+const guildId = new URLSearchParams(location.search).get("guild");
 
 let currentLanguage = localStorage.getItem("rumbleLanguage") || "ar";
 let savedEmbeds = [];
 let editingId = null;
-let imageURL = "";
-let thumbnailURL = "";
 let temporaryImage = "";
 let temporaryThumbnail = "";
+let channelRequest = false;
+let saving = false;
+let sending = false;
 
-$("backButton").href = guildId
-? `/server.html?guild=${encodeURIComponent(guildId)}`
-: "/";
+let imageObjectURL = null;
+let thumbnailObjectURL = null;
 
 function t(key){
 return (translations[currentLanguage] || translations.ar)[key] || key;
-}
-
-function applyLanguage(lang){
-if(!translations[lang]) lang="ar";
-currentLanguage=lang;
-localStorage.setItem("rumbleLanguage",lang);
-document.documentElement.lang=lang;
-document.documentElement.dir=lang==="ar"?"rtl":"ltr";
-
-const map={
-subtitle:"subtitle",editor:"editorTitle",name:"nameLabel",
-title:"titleLabel",description:"descriptionLabel",color:"colorLabel",
-image:"imageLabel",thumbnail:"thumbnailLabel",imageUrl:"imageUrlLabel",
-thumbnailUrl:"thumbnailUrlLabel",fields:"fieldsTitle",add:"addField",
-footer:"footerLabel",preview:"previewTitle",saved:"savedTitle",
-refresh:"refreshButton",send:"sendTitle",channel:"channelLabel",
-save:"saveButton",new:"newButton",sendButton:"sendButton",
-previewNote:"previewNote",generalNote:"generalNote"
-};
-
-for(const [key,id] of Object.entries(map)){
-$(id).textContent=t(key);
-}
-
-$("embedName").placeholder=t("name");
-$("embedTitle").placeholder=t("title");
-$("embedDescription").placeholder=t("description");
-$("embedFooter").placeholder=t("footer");
-$("language").value=lang;
-
-document.querySelectorAll(".field-name").forEach(x=>x.placeholder=t("fieldName"));
-document.querySelectorAll(".field-value").forEach(x=>x.placeholder=t("fieldValue"));
-document.querySelectorAll(".remove-button").forEach(x=>x.textContent=t("remove"));
-
-renderSaved();
 }
 
 function showStatus(id,message){
@@ -348,19 +412,28 @@ $(id).hidden=true;
 $(id).textContent="";
 }
 
+function timeoutSignal(){
+return AbortSignal.timeout(20000);
+}
+
 async function api(url,options={}){
-const response=await fetch(url,{
+
+const response = await fetch(url,{
 ...options,
+signal:options.signal || timeoutSignal(),
 credentials:"same-origin",
 cache:"no-store",
 headers:{
 ...(options.body?{"Content-Type":"application/json"}:{}),
-...(options.headers||{})
+...(options.headers || {})
 }
 });
 
 let data={};
-try{data=await response.json()}catch{}
+
+try{
+data=await response.json();
+}catch{}
 
 if(response.status===401){
 throw new Error(t("login"));
@@ -373,29 +446,114 @@ throw new Error(data.error || t("failed"));
 return data;
 }
 
+function applyLanguage(lang){
+
+if(!translations[lang])lang="ar";
+
+currentLanguage=lang;
+
+localStorage.setItem("rumbleLanguage",lang);
+
+document.documentElement.lang=lang;
+document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+
+const map={
+subtitle:"subtitle",
+editor:"editorTitle",
+name:"nameLabel",
+title:"titleLabel",
+description:"descriptionLabel",
+color:"colorLabel",
+image:"imageLabel",
+thumbnail:"thumbnailLabel",
+imageUrl:"imageUrlLabel",
+thumbnailUrl:"thumbnailUrlLabel",
+fields:"fieldsTitle",
+add:"addField",
+footer:"footerLabel",
+preview:"previewTitle",
+saved:"savedTitle",
+refresh:"refreshButton",
+send:"sendTitle",
+channel:"channelLabel",
+save:"saveButton",
+new:"newButton",
+sendButton:"sendButton",
+previewNote:"previewNote",
+generalNote:"generalNote"
+};
+
+Object.entries(map).forEach(([key,id])=>{
+$(id).textContent=t(key);
+});
+
+$("embedName").placeholder=t("name");
+$("embedTitle").placeholder=t("title");
+$("embedDescription").placeholder=t("description");
+$("embedFooter").placeholder=t("footer");
+
+$("language").value=lang;
+
+document.querySelectorAll(".field-name").forEach(x=>{
+x.placeholder=t("fieldName");
+});
+
+document.querySelectorAll(".field-value").forEach(x=>{
+x.placeholder=t("fieldValue");
+});
+
+document.querySelectorAll(".remove-button").forEach(x=>{
+x.textContent=t("remove");
+});
+
+renderSaved();
+}
+
+function intToHex(value){
+
+let number=Number(value);
+
+if(!Number.isFinite(number))number=2460927;
+
+number=Math.max(0,Math.min(16777215,number));
+
+return "#"+number.toString(16).padStart(6,"0");
+}
+
 function hexToInt(hex){
 return parseInt(hex.replace("#",""),16);
 }
 
-function intToHex(value){
-return "#"+Number(value || 0).toString(16).padStart(6,"0").slice(-6);
-}
-
 function validUrl(value){
-if(!value) return true;
+
+if(!value)return true;
+
 try{
 const url=new URL(value);
 return url.protocol==="https:" || url.protocol==="http:";
-}catch{return false}
+}catch{
+return false;
+}
 }
 
 function collectEmbed(){
+
 const fields=[];
+
 document.querySelectorAll(".field-box").forEach(box=>{
+
 const name=box.querySelector(".field-name").value.trim();
 const value=box.querySelector(".field-value").value.trim();
-if(name && value) fields.push({name,value});
+
+if(name && value){
+fields.push({name,value});
+}
+
 });
+
+if(fields.length>25){
+throw new Error("Maximum 25 fields allowed.");
+}
 
 const mainImage=$("imageUrl").value.trim();
 const thumb=$("thumbnailUrl").value.trim();
@@ -405,65 +563,107 @@ throw new Error("Image URLs must start with http:// or https://");
 }
 
 const embed={
-title:$("embedTitle").value.trim(),
-description:$("embedDescription").value.trim(),
 color:hexToInt($("embedColor").value),
-fields,
-footer:{text:$("embedFooter").value.trim()}
+fields
 };
 
-if(mainImage) embed.image={url:mainImage};
-if(thumb) embed.thumbnail={url:thumb};
+const title=$("embedTitle").value.trim();
+const description=$("embedDescription").value.trim();
+const footer=$("embedFooter").value.trim();
+
+if(title)embed.title=title;
+if(description)embed.description=description;
+if(footer)embed.footer={text:footer};
+if(mainImage)embed.image={url:mainImage};
+if(thumb)embed.thumbnail={url:thumb};
 
 return embed;
 }
 
 function updatePreview(){
+
 const embed=collectEmbed();
-$("previewEmbedTitle").textContent=embed.title;
-$("previewEmbedDescription").textContent=embed.description;
-$("previewFooter").textContent=embed.footer.text;
+
+$("previewEmbedTitle").textContent=embed.title || "";
+$("previewEmbedDescription").textContent=embed.description || "";
+$("previewFooter").textContent=embed.footer?.text || "";
+
+const color=intToHex(embed.color);
 
 $("previewEmbed").style.borderRightColor=
-document.documentElement.dir==="rtl"?intToHex(embed.color):"transparent";
+document.documentElement.dir==="rtl"?color:"transparent";
+
 $("previewEmbed").style.borderLeftColor=
-document.documentElement.dir==="ltr"?intToHex(embed.color):"transparent";
+document.documentElement.dir==="ltr"?color:"transparent";
 
 const image=$("previewImage");
+
 const imageSource=temporaryImage || embed.image?.url || "";
+
 image.style.display=imageSource?"block":"none";
-if(imageSource) image.src=imageSource;
-else image.removeAttribute("src");
+
+if(imageSource){
+if(image.src!==imageSource)image.src=imageSource;
+}else{
+image.removeAttribute("src");
+}
 
 const thumbnail=$("previewThumbnail");
+
 thumbnail.replaceChildren();
+
 const thumbSource=temporaryThumbnail || embed.thumbnail?.url || "";
+
 if(thumbSource){
+
 const img=document.createElement("img");
+
 img.src=thumbSource;
-img.alt="Embed Thumbnail";
 thumbnail.appendChild(img);
+
 }
 
 const fields=$("previewFields");
+
 fields.replaceChildren();
+
 embed.fields.forEach(item=>{
+
 const div=document.createElement("div");
 div.className="embed-field";
+
 const strong=document.createElement("strong");
 strong.textContent=item.name;
+
 const span=document.createElement("span");
 span.textContent=item.value;
+
 div.append(strong,span);
+
 fields.appendChild(div);
+
 });
+
 }
 
 function safePreview(){
-try{updatePreview()}catch(error){}
+
+try{
+updatePreview();
+clearStatus("editorStatus");
+}catch(error){
+showStatus("editorStatus",error.message);
+}
+
 }
 
 function addField(name="",value=""){
+
+if(document.querySelectorAll("#fieldsContainer .field-box").length>=25){
+showStatus("editorStatus","Maximum 25 fields allowed.");
+return;
+}
+
 const box=document.createElement("div");
 box.className="field-box";
 
@@ -482,17 +682,39 @@ textarea.value=value;
 const remove=document.createElement("button");
 remove.className="remove-button danger";
 remove.textContent=t("remove");
-remove.onclick=()=>{box.remove();safePreview()};
+
+remove.onclick=()=>{
+box.remove();
+safePreview();
+};
 
 input.addEventListener("input",safePreview);
 textarea.addEventListener("input",safePreview);
 
 box.append(input,textarea,remove);
+
 $("fieldsContainer").appendChild(box);
+
+}
+
+function releaseObjectURLs(){
+
+if(imageObjectURL){
+URL.revokeObjectURL(imageObjectURL);
+imageObjectURL=null;
+}
+
+if(thumbnailObjectURL){
+URL.revokeObjectURL(thumbnailObjectURL);
+thumbnailObjectURL=null;
+}
+
 }
 
 function resetEditor(){
+
 editingId=null;
+
 $("embedName").value="";
 $("embedTitle").value="";
 $("embedDescription").value="";
@@ -502,41 +724,76 @@ $("imageUrl").value="";
 $("thumbnailUrl").value="";
 $("embedImage").value="";
 $("embedThumbnail").value="";
+
 $("fieldsContainer").replaceChildren();
+
+releaseObjectURLs();
 
 temporaryImage="";
 temporaryThumbnail="";
+
+$("saveButton").textContent=t("save");
+
 clearStatus("editorStatus");
+clearStatus("sendStatus");
+
 safePreview();
+
 }
 
 function loadIntoEditor(item){
+
+try{
+
 editingId=String(item.id);
+
 const embed=item.embed_data || {};
 
 $("embedName").value=item.embed_name || "";
+
 $("embedTitle").value=embed.title || "";
 $("embedDescription").value=embed.description || "";
+
 $("embedColor").value=intToHex(embed.color);
+
 $("embedFooter").value=embed.footer?.text || "";
+
 $("imageUrl").value=embed.image?.url || "";
 $("thumbnailUrl").value=embed.thumbnail?.url || "";
 
 $("fieldsContainer").replaceChildren();
-(embed.fields || []).forEach(field=>addField(field.name,field.value));
+
+(embed.fields || []).forEach(field=>{
+addField(field.name || "",field.value || "");
+});
+
+releaseObjectURLs();
 
 temporaryImage="";
 temporaryThumbnail="";
+
 $("embedImage").value="";
 $("embedThumbnail").value="";
 
 $("saveButton").textContent=t("edit");
+
 clearStatus("editorStatus");
+clearStatus("sendStatus");
+
 safePreview();
+
 window.scrollTo({top:0,behavior:"smooth"});
+
+}catch(error){
+
+showStatus("editorStatus",error.message || t("failed"));
+
+}
+
 }
 
 async function loadSaved(){
+
 if(!guildId){
 showStatus("savedList",t("noGuild"));
 return;
@@ -544,48 +801,89 @@ return;
 
 showStatus("savedList",t("loading"));
 
+$("refreshButton").disabled=true;
+
 try{
-const data=await api(`/api/guilds/${encodeURIComponent(guildId)}/embeds`);
-savedEmbeds=data.embeds || [];
+
+const data=await api(
+`/api/guilds/${encodeURIComponent(guildId)}/embeds`
+);
+
+savedEmbeds=Array.isArray(data.embeds)?data.embeds:[];
+
 renderSaved();
+
 }catch(error){
+
 showStatus("savedList",error.message);
+
+}finally{
+
+$("refreshButton").disabled=false;
+
 }
+
 }
 
 function renderSaved(){
+
+const list=$("savedList");
+
+list.replaceChildren();
+
 if(!savedEmbeds.length){
-$("savedList").textContent=t("empty");
+
+list.textContent=t("empty");
 return;
+
 }
 
-$("savedList").replaceChildren();
-
 savedEmbeds.forEach(item=>{
+
 const box=document.createElement("div");
 box.className="field-box";
 
 const name=document.createElement("strong");
+
 name.textContent=item.embed_name || "Untitled Embed";
 
 const edit=document.createElement("button");
+
 edit.textContent="✏️ "+t("edit");
+
 edit.onclick=()=>loadIntoEditor(item);
 
 const del=document.createElement("button");
+
 del.className="danger";
 del.textContent="🗑️ "+t("delete");
+
 del.onclick=()=>deleteEmbed(item.id);
 
 box.append(name,edit,del);
-$("savedList").appendChild(box);
+
+list.appendChild(box);
+
 });
+
 }
 
 async function saveEmbed(){
+
 if(!guildId)throw new Error(t("noGuild"));
 
+if(saving)return;
+
+saving=true;
+
+$("saveButton").disabled=true;
+
+showStatus("editorStatus",t("saving"));
+
+try{
+
 const name=$("embedName").value.trim() || "Untitled Embed";
+
 const embed=collectEmbed();
 
 const url=editingId
@@ -597,137 +895,316 @@ method:editingId?"PUT":"POST",
 body:JSON.stringify({name,embed})
 });
 
+if(data.embed?.id){
 editingId=String(data.embed.id);
-showStatus("editorStatus",t("savedOk"));
+}
+
+$("saveButton").textContent=t("edit");
+
 await loadSaved();
+
+showStatus("editorStatus",t("savedOk"));
+
+}catch(error){
+
+showStatus("editorStatus",error.message);
+
+}finally{
+
+saving=false;
+$("saveButton").disabled=false;
+
+}
+
 }
 
 async function deleteEmbed(id){
+
 if(!confirm(t("confirmDelete")))return;
 
 try{
-await api(`/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(id)}`,{
-method:"DELETE"
-});
 
-if(editingId===String(id))resetEditor();
+await api(
+`/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(id)}`,
+{method:"DELETE"}
+);
+
+if(editingId===String(id)){
+resetEditor();
+}
 
 await loadSaved();
+
 showStatus("editorStatus",t("deletedOk"));
+
 }catch(error){
+
 showStatus("editorStatus",error.message);
+
 }
+
 }
 
 async function loadChannels(){
-if(!guildId)return;
+
+if(!guildId){
+$("channelSelect").replaceChildren(
+new Option(t("noGuild"),"")
+);
+return;
+}
+
+if(channelRequest)return;
+
+channelRequest=true;
+
+const select=$("channelSelect");
+
+select.disabled=true;
+
+select.replaceChildren(
+new Option(t("channelLoading"),"")
+);
 
 try{
-const data=await api(`/api/guilds/${encodeURIComponent(guildId)}/channels`);
-$("channelSelect").replaceChildren();
 
-(data.channels || []).forEach(channel=>{
+const data=await api(
+`/api/guilds/${encodeURIComponent(guildId)}/channels`
+);
+
+const channels=Array.isArray(data.channels)?data.channels:[];
+
+select.replaceChildren();
+
+channels.forEach(channel=>{
+
 const option=document.createElement("option");
+
 option.value=channel.id;
 option.textContent="# "+channel.name;
-$("channelSelect").appendChild(option);
+
+select.appendChild(option);
+
 });
-}catch(error){
-$("channelSelect").textContent=error.message;
+
+if(!channels.length){
+select.add(new Option(t("noChannels"),""));
+}else{
+select.selectedIndex=0;
 }
+
+}catch(error){
+
+select.replaceChildren(
+new Option(error.message,"")
+);
+
+showStatus("sendStatus",error.message);
+
+}finally{
+
+channelRequest=false;
+
+select.disabled=select.options.length===0 ||
+!select.options[0].value;
+
+$("sendButton").disabled=select.disabled;
+
+}
+
 }
 
 async function sendEmbed(){
-if(!editingId)throw new Error(t("saveFirst"));
 
-const channelId=$("channelSelect").value;
-if(!channelId)throw new Error(t("chooseChannel"));
+if(sending)return;
 
-await api(`/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}/send`,{
-method:"POST",
-body:JSON.stringify({channelId})
-});
-
-showStatus("sendStatus",t("sentOk"));
+if(!editingId){
+throw new Error(t("saveFirst"));
 }
 
-$("addField").addEventListener("click",()=>{
-if(document.querySelectorAll("#fieldsContainer .field-box").length>=25)return;
-addField();
-safePreview();
+const channelId=$("channelSelect").value;
+
+if(!channelId){
+throw new Error(t("chooseChannel"));
+}
+
+sending=true;
+
+$("sendButton").disabled=true;
+
+showStatus("sendStatus",t("sending"));
+
+try{
+
+await api(
+`/api/guilds/${encodeURIComponent(guildId)}/embeds/${encodeURIComponent(editingId)}/send`,
+{
+method:"POST",
+body:JSON.stringify({channelId})
+}
+);
+
+showStatus("sendStatus",t("sentOk"));
+
+}catch(error){
+
+showStatus("sendStatus",error.message);
+
+}finally{
+
+sending=false;
+
+$("sendButton").disabled=
+!$("channelSelect").value;
+
+}
+
+}
+
+// Live preview
+
+[
+"embedTitle",
+"embedDescription",
+"embedColor",
+"embedFooter",
+"imageUrl",
+"thumbnailUrl"
+].forEach(id=>{
+
+$(id).addEventListener("input",safePreview);
+
 });
 
-document.querySelectorAll(
-"#embedTitle,#embedDescription,#embedColor,#embedFooter,#imageUrl,#thumbnailUrl"
-).forEach(input=>input.addEventListener("input",safePreview));
+// Add field
+
+$("addField").addEventListener("click",()=>{
+
+addField();
+safePreview();
+
+});
+
+// Local image preview
 
 $("embedImage").addEventListener("change",event=>{
+
 const file=event.target.files[0];
+
 if(!file)return;
+
 if(!file.type.startsWith("image/")){
 alert(t("invalidImage"));
 return;
 }
-temporaryImage=URL.createObjectURL(file);
+
+if(imageObjectURL){
+URL.revokeObjectURL(imageObjectURL);
+}
+
+imageObjectURL=URL.createObjectURL(file);
+
+temporaryImage=imageObjectURL;
+
 safePreview();
+
 });
 
 $("embedThumbnail").addEventListener("change",event=>{
+
 const file=event.target.files[0];
+
 if(!file)return;
+
 if(!file.type.startsWith("image/")){
 alert(t("invalidImage"));
 return;
 }
-temporaryThumbnail=URL.createObjectURL(file);
+
+if(thumbnailObjectURL){
+URL.revokeObjectURL(thumbnailObjectURL);
+}
+
+thumbnailObjectURL=URL.createObjectURL(file);
+
+temporaryThumbnail=thumbnailObjectURL;
+
 safePreview();
+
 });
 
-$("saveButton").addEventListener("click",async()=>{
-try{
-await saveEmbed();
-}catch(error){
-showStatus("editorStatus",error.message);
-}
-});
+// Save
+
+$("saveButton").addEventListener("click",saveEmbed);
+
+// New design
 
 $("newButton").addEventListener("click",()=>{
+
 resetEditor();
+
 showStatus("editorStatus",t("newReady"));
+
 });
 
-$("refreshButton").addEventListener("click",()=>{
-loadSaved();
-loadChannels();
+// Refresh
+
+$("refreshButton").addEventListener("click",async()=>{
+
+await Promise.all([
+loadSaved(),
+loadChannels()
+]);
+
 });
 
-$("sendButton").addEventListener("click",async()=>{
-try{
-await sendEmbed();
-}catch(error){
-showStatus("sendStatus",error.message);
-}
-});
+// Send
+
+$("sendButton").addEventListener("click",sendEmbed);
+
+// Language
 
 $("language").addEventListener("change",event=>{
 applyLanguage(event.target.value);
 });
 
 window.addEventListener("storage",event=>{
+
 if(event.key==="rumbleLanguage" && translations[event.newValue]){
 applyLanguage(event.newValue);
 }
+
 });
 
+// Image errors
+
+$("previewImage").addEventListener("error",()=>{
+showStatus("editorStatus",t("imageError"));
+});
+
+// Back button
+
+$("backButton").href=guildId
+? `/server.html?guild=${encodeURIComponent(guildId)}`
+: "/";
+
+// Start
+
 applyLanguage(currentLanguage);
+
 resetEditor();
 
 if(guildId){
+
 loadSaved();
 loadChannels();
+
 }else{
+
 showStatus("savedList",t("noGuild"));
+
 }
+
 </script>
 
 </body>
