@@ -1167,7 +1167,7 @@ function validateTicketPanel(data) {
   const required = ["panelChannelId", "ticketCategoryId", "transcriptChannelId"];
   for (const key of required) if (!validSnowflake(data[key])) return "Choose a valid channel and category for every required field.";
   if (!Array.isArray(data.supportRoleIds) || data.supportRoleIds.length < 1 || data.supportRoleIds.length > 20 || !data.supportRoleIds.every(validSnowflake)) return "Choose at least one support role.";
-  const lengths = [["panelTitle",256],["panelDescription",4000],["buttonLabel",80],["underMessage",1500],["welcomeMessage",2000],["panelName",80]];
+  const lengths = [["panelTitle",256],["panelDescription",4000],["buttonLabel",80],["underMessage",1500],["welcomeMessage",2000]];
   for (const [key,max] of lengths) if (typeof data[key] !== "string" || data[key].length > max) return `Invalid ${key}.`;
   if (!/^#[0-9a-fA-F]{6}$/.test(data.panelColor || "")) return "Invalid panel color.";
   if (!["#e74c3c","#7f8c8d","#258cff","#2ecc71"].includes(data.underMessageColor)) return "Invalid message color.";
