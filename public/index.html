@@ -590,12 +590,18 @@ accountMenu.addEventListener("click", (event) => {
 logoutButton.onclick = async () => {
     if (!confirm("هل أنت متأكد أنك تريد تسجيل الخروج؟")) return;
 
-    await fetch("/api/logout", {
+    const response = await fetch("/api/logout", {
         method: "POST",
-        credentials: "same-origin"
+        credentials: "same-origin",
+        cache: "no-store"
     });
 
-    window.location.reload();
+    if (!response.ok) {
+        alert("تعذر تسجيل الخروج. حاول مرة أخرى.");
+        return;
+    }
+
+    window.location.replace("/?loggedout=" + Date.now());
 };
         } else {
             loginButton.textContent = "🎮 Login with Discord";
