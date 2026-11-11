@@ -987,7 +987,7 @@ try{
 const data=await api(
 `/api/guilds/${encodeURIComponent(guildId)}/channels`
 );
-
+clearStatus("sendStatus");
 const channels=Array.isArray(data.channels)?data.channels:[];
 
 select.replaceChildren();
