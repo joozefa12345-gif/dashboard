@@ -181,8 +181,8 @@ subtitle:"منشئ رسائل الإيمبد الاحترافي",
 editor:"📝 إنشاء إيمبد جديد",
 name:"اسم التصميم",title:"عنوان الإيمبد",
 description:"وصف الإيمبد",color:"لون الإيمبد",
-image:"صورة من الجهاز (مؤقتة)",
-thumbnail:"الصورة المصغرة من الجهاز (مؤقتة)",
+image:"رفع صورة من الجهاز (حفظ دائم)",
+thumbnail:"رفع الصورة المصغرة من الجهاز (حفظ دائم)",
 imageUrl:"رابط الصورة الرئيسية",
 thumbnailUrl:"رابط الصورة المصغرة",
 fields:"📋 حقول الإيمبد",add:"➕ إضافة حقل",
@@ -213,6 +213,9 @@ newReady:"تم تجهيز تصميم جديد.",
 previewNote:"هذه معاينة مباشرة لشكل الإيمبد قبل إرساله.",
 generalNote:"يجب تسجيل الدخول إلى Discord وامتلاك صلاحية إدارة السيرفر.",
 invalidImage:"اختر ملف صورة صحيحًا.",
+imageUploading:"جارٍ رفع الصورة وحفظها...",
+imageUploaded:"تم رفع الصورة وحفظها بشكل دائم.",
+imageTooLarge:"حجم الصورة يجب ألا يتجاوز 4 ميجابايت.",
 failed:"حدث خطأ. حاول مرة أخرى.",
 channelLoading:"جارٍ تحميل الرومات...",
 channelError:"تعذر تحميل الرومات.",
@@ -228,8 +231,8 @@ subtitle:"Professional Embed Builder",
 editor:"📝 Create New Embed",
 name:"Design Name",title:"Embed Title",
 description:"Embed Description",color:"Embed Color",
-image:"Local Image Preview (Temporary)",
-thumbnail:"Local Thumbnail Preview (Temporary)",
+image:"Upload Image from Device (Permanent)",
+thumbnail:"Upload Thumbnail from Device (Permanent)",
 imageUrl:"Main Image URL",thumbnailUrl:"Thumbnail URL",
 fields:"📋 Embed Fields",add:"➕ Add Field",
 footer:"Footer Text",preview:"👁️ Embed Preview",
@@ -255,6 +258,9 @@ newReady:"New design is ready.",
 previewNote:"Live preview of your embed before sending.",
 generalNote:"Discord login and server management permissions are required.",
 invalidImage:"Please select a valid image.",
+imageUploading:"Uploading and permanently saving image...",
+imageUploaded:"Image uploaded and saved permanently.",
+imageTooLarge:"Image must be 4 MB or smaller.",
 failed:"An error occurred. Try again.",
 channelLoading:"Loading channels...",
 channelError:"Could not load channels.",
@@ -271,8 +277,8 @@ editor:"📝 Créer un nouvel Embed",
 name:"Nom du design",title:"Titre de l'Embed",
 description:"Description de l'Embed",
 color:"Couleur de l'Embed",
-image:"Aperçu image local (temporaire)",
-thumbnail:"Aperçu miniature local (temporaire)",
+image:"Téléverser une image (stockage permanent)",
+thumbnail:"Téléverser une miniature (stockage permanent)",
 imageUrl:"URL de l'image principale",
 thumbnailUrl:"URL de la miniature",
 fields:"📋 Champs de l'Embed",
@@ -299,6 +305,9 @@ newReady:"Nouveau design prêt.",
 previewNote:"Aperçu en direct avant l'envoi.",
 generalNote:"Connexion Discord et autorisation de gestion requises.",
 invalidImage:"Veuillez sélectionner une image valide.",
+imageUploading:"Téléversement et enregistrement permanent...",
+imageUploaded:"Image téléversée et enregistrée durablement.",
+imageTooLarge:"L’image doit faire 4 Mo ou moins.",
 failed:"Une erreur est survenue.",
 channelLoading:"Chargement des salons...",
 channelError:"Impossible de charger les salons.",
@@ -313,8 +322,8 @@ subtitle:"Professioneller Embed-Editor",
 editor:"📝 Neuen Embed erstellen",
 name:"Designname",title:"Embed-Titel",
 description:"Embed-Beschreibung",color:"Embed-Farbe",
-image:"Lokale Bildvorschau (temporär)",
-thumbnail:"Lokale Miniaturvorschau (temporär)",
+image:"Bild vom Gerät hochladen (dauerhaft)",
+thumbnail:"Miniatur vom Gerät hochladen (dauerhaft)",
 imageUrl:"Hauptbild-URL",thumbnailUrl:"Miniatur-URL",
 fields:"📋 Embed-Felder",add:"➕ Feld hinzufügen",
 footer:"Fußzeilentext",preview:"👁️ Embed-Vorschau",
@@ -339,6 +348,9 @@ newReady:"Neues Design bereit.",
 previewNote:"Live-Vorschau vor dem Senden.",
 generalNote:"Discord-Anmeldung und Verwaltungsrechte erforderlich.",
 invalidImage:"Bitte wähle eine gültige Bilddatei.",
+imageUploading:"Bild wird hochgeladen und dauerhaft gespeichert...",
+imageUploaded:"Bild wurde dauerhaft gespeichert.",
+imageTooLarge:"Das Bild darf höchstens 4 MB groß sein.",
 failed:"Ein Fehler ist aufgetreten.",
 channelLoading:"Kanäle werden geladen...",
 channelError:"Kanäle konnten nicht geladen werden.",
@@ -353,8 +365,8 @@ subtitle:"Creador profesional de Embeds",
 editor:"📝 Crear nuevo Embed",
 name:"Nombre del diseño",title:"Título del Embed",
 description:"Descripción del Embed",color:"Color del Embed",
-image:"Vista previa de imagen local (temporal)",
-thumbnail:"Vista previa de miniatura local (temporal)",
+image:"Subir imagen del dispositivo (permanente)",
+thumbnail:"Subir miniatura del dispositivo (permanente)",
 imageUrl:"URL de imagen principal",
 thumbnailUrl:"URL de miniatura",
 fields:"📋 Campos del Embed",add:"➕ Añadir campo",
@@ -380,6 +392,9 @@ newReady:"Nuevo diseño listo.",
 previewNote:"Vista previa en directo antes del envío.",
 generalNote:"Se requiere iniciar sesión y permisos de administración.",
 invalidImage:"Selecciona una imagen válida.",
+imageUploading:"Subiendo y guardando la imagen permanentemente...",
+imageUploaded:"Imagen subida y guardada permanentemente.",
+imageTooLarge:"La imagen debe pesar 4 MB o menos.",
 failed:"Ocurrió un error.",
 channelLoading:"Cargando canales...",
 channelError:"No se pudieron cargar los canales.",
@@ -403,6 +418,7 @@ let temporaryThumbnail = "";
 let channelRequest = false;
 let saving = false;
 let sending = false;
+let pendingImageUploads = [];
 
 let imageObjectURL = null;
 let thumbnailObjectURL = null;
@@ -551,10 +567,14 @@ function collectEmbed(){
 
 const fields=[];
 
-document.querySelectorAll(".field-box").forEach(box=>{
+document.querySelectorAll("#fieldsContainer > .field-box").forEach(box=>{
 
-const name=box.querySelector(".field-name").value.trim();
-const value=box.querySelector(".field-value").value.trim();
+const nameInput=box.querySelector(".field-name");
+const valueInput=box.querySelector(".field-value");
+if(!nameInput || !valueInput)return;
+
+const name=nameInput.value.trim();
+const value=valueInput.value.trim();
 
 if(!name && !value)return;
 
@@ -617,10 +637,14 @@ $("previewEmbed").style.borderRightColor="transparent";
 const fieldsContainer=$("previewFields");
 fieldsContainer.replaceChildren();
 
-document.querySelectorAll("#fieldsContainer .field-box").forEach(box=>{
+document.querySelectorAll("#fieldsContainer > .field-box").forEach(box=>{
 
-const name=box.querySelector(".field-name").value.trim();
-const value=box.querySelector(".field-value").value.trim();
+const nameInput=box.querySelector(".field-name");
+const valueInput=box.querySelector(".field-value");
+if(!nameInput || !valueInput)return;
+
+const name=nameInput.value.trim();
+const value=valueInput.value.trim();
 
 if(!name&&!value)return;
 
@@ -896,6 +920,12 @@ showStatus("editorStatus",t("saving"));
 
 const name=$("embedName").value.trim() || "Untitled Embed";
 
+const uploads = pendingImageUploads.splice(0);
+const uploadResults = await Promise.all(uploads);
+if(uploadResults.some(result => result === false)){
+  throw new Error(t("imageError"));
+}
+
 const embed=collectEmbed();
 
 const url=editingId
@@ -1102,52 +1132,80 @@ safePreview();
 
 });
 
-// Local image preview
+// Upload selected files to the server so the returned URL remains available to Discord.
+async function uploadSelectedImage(file, inputId, urlId, kind){
+  if(!file)return;
+  const allowedTypes=["image/png","image/jpeg","image/gif","image/webp"];
+  if(!allowedTypes.includes(file.type)){
+    alert(t("invalidImage"));
+    $(inputId).value="";
+    return false;
+  }
+  if(file.size>4*1024*1024){
+    alert(t("imageTooLarge"));
+    $(inputId).value="";
+    return false;
+  }
 
+  const urlInput=$(urlId);
+  const originalUrl=urlInput.value;
+  const objectURL=URL.createObjectURL(file);
+  if(kind==="main"){
+    if(imageObjectURL)URL.revokeObjectURL(imageObjectURL);
+    imageObjectURL=objectURL;
+    temporaryImage=objectURL;
+  }else{
+    if(thumbnailObjectURL)URL.revokeObjectURL(thumbnailObjectURL);
+    thumbnailObjectURL=objectURL;
+    temporaryThumbnail=objectURL;
+  }
+  safePreview();
+  showStatus("editorStatus",t("imageUploading"));
+
+  try{
+    const result=await api(
+      `/api/guilds/${encodeURIComponent(guildId)}/images`,
+      {method:"POST",body:file,headers:{"Content-Type":file.type}}
+    );
+    if($(inputId).files[0]===file && urlInput.value===originalUrl){
+      urlInput.value=result.image.url;
+      if(kind==="main"){
+        temporaryImage="";
+        if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null;}
+      }else{
+        temporaryThumbnail="";
+        if(thumbnailObjectURL){URL.revokeObjectURL(thumbnailObjectURL);thumbnailObjectURL=null;}
+      }
+      safePreview();
+      showStatus("editorStatus",t("imageUploaded"));
+      return true;
+    }
+    return false;
+  }catch(error){
+    showStatus("editorStatus",error.message);
+    return false;
+  }
+}
+
+// Upload main image and thumbnail, preserving manual URL entry.
 $("embedImage").addEventListener("change",event=>{
-
-const file=event.target.files[0];
-
-if(!file)return;
-
-if(!file.type.startsWith("image/")){
-alert(t("invalidImage"));
-return;
-}
-
-if(imageObjectURL){
-URL.revokeObjectURL(imageObjectURL);
-}
-
-imageObjectURL=URL.createObjectURL(file);
-
-temporaryImage=imageObjectURL;
-
-safePreview();
-
+  pendingImageUploads.push(uploadSelectedImage(event.target.files[0],"embedImage","imageUrl","main"));
 });
 
 $("embedThumbnail").addEventListener("change",event=>{
+  pendingImageUploads.push(uploadSelectedImage(event.target.files[0],"embedThumbnail","thumbnailUrl","thumbnail"));
+});
 
-const file=event.target.files[0];
-
-if(!file)return;
-
-if(!file.type.startsWith("image/")){
-alert(t("invalidImage"));
-return;
-}
-
-if(thumbnailObjectURL){
-URL.revokeObjectURL(thumbnailObjectURL);
-}
-
-thumbnailObjectURL=URL.createObjectURL(file);
-
-temporaryThumbnail=thumbnailObjectURL;
-
-safePreview();
-
+// A manually entered URL takes priority over any local temporary preview.
+$("imageUrl").addEventListener("input",()=>{
+  temporaryImage="";
+  if(imageObjectURL){URL.revokeObjectURL(imageObjectURL);imageObjectURL=null;}
+  safePreview();
+});
+$("thumbnailUrl").addEventListener("input",()=>{
+  temporaryThumbnail="";
+  if(thumbnailObjectURL){URL.revokeObjectURL(thumbnailObjectURL);thumbnailObjectURL=null;}
+  safePreview();
 });
 
 // Save
