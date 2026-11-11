@@ -712,10 +712,14 @@ app.get("/api/guilds/:guildId/channels", async (req, res) => {
       .map(channel => ({
         id: channel.id,
         name: channel.name,
-        type: channel.type
+        type: channel.type,
+        parentId: channel.parent_id || null
       }));
+    const categories = (result.data || [])
+      .filter(channel => channel.type === 4)
+      .map(channel => ({ id: channel.id, name: channel.name, type: channel.type }));
 
-    res.json({ channels });
+    res.json({ channels, categories });
 
   } catch (error) {
     console.error("Load channels failed:", error);
