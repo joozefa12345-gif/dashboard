@@ -698,8 +698,15 @@ app.use("/api", (req, res) => {
 
 app.use(express.static("public"));
 
-app.get("*", (req, res) => {
-  res.sendFile(require("path").join(process.cwd(), "public", "index.html"));
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+
+  res.sendFile(
+    require("path").join(process.cwd(), "public", "index.html"),
+    error => {
+      if (error) next(error);
+    }
+  );
 });
 
 app.use((error, req, res, next) => {
