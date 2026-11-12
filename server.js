@@ -216,6 +216,19 @@ async function ensureDatabase() {
         ON image_assets (guild_id)
       `);
       await pool.query(`
+        CREATE TABLE IF NOT EXISTS guild_settings (
+          guild_id TEXT PRIMARY KEY,
+          settings JSONB NOT NULL DEFAULT '{"commands":{},"modules":{}}'::jsonb,
+          updated_by TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS guild_settings_updated_at_idx
+        ON guild_settings (updated_at)
+      `);
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS oauth_sessions (
           sid TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
@@ -1303,6 +1316,137 @@ app.delete("/api/guilds/:guildId/ticket-panels/:panelId", async (req, res) => {
   } catch (error) {
     console.error("Delete ticket panel failed:", error);
     res.status(500).json({ error: "server_error", message: "Could not delete ticket panel." });
+  }
+});
+
+
+// Shared per-server configuration used by dashboard modules and command controls.
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateGuildSettings(settings) {
+  if (!isPlainObject(settings)) return "Settings must be an object.";
+  const topKeys = Object.keys(settings);
+  if (topKeys.some(key => !["commands", "modules"].includes(key))) {
+    return "Only commands and modules settings are supported.";
+  }
+  const commands = settings.commands || {};
+  const modules = settings.modules || {};
+  if (!isPlainObject(commands) || !isPlainObject(modules)) {
+    return "Commands and modules must be objects.";
+  }
+  if (Object.keys(commands).length > 200 || Object.keys(modules).length > 100) {
+    return "Too many command or module settings.";
+  }
+
+  const validIdList = value =>
+    Array.isArray(value) &&
+    value.length <= 100 &&
+    value.every(id => validSnowflake(id));
+
+  for (const [name, config] of Object.entries(commands)) {
+    if (!/^[a-z0-9_-]{1,64}$/i.test(name) || !isPlainObject(config)) {
+      return "Invalid command setting.";
+    }
+    if (config.enabled !== undefined && typeof config.enabled !== "boolean") {
+      return "Command enabled must be true or false.";
+    }
+    for (const key of ["allowedRoleIds", "deniedRoleIds", "allowedChannelIds", "deniedChannelIds"]) {
+      if (config[key] !== undefined && !validIdList(config[key])) {
+        return "Invalid role or channel ID list.";
+      }
+    }
+  }
+
+  for (const [name, config] of Object.entries(modules)) {
+    if (!/^[a-z0-9_-]{1,64}$/i.test(name) || !isPlainObject(config)) {
+      return "Invalid module setting.";
+    }
+    if (config.enabled !== undefined && typeof config.enabled !== "boolean") {
+      return "Module enabled must be true or false.";
+    }
+    if (config.settings !== undefined && !isPlainObject(config.settings)) {
+      return "Module settings must be an object.";
+    }
+  }
+
+  if (Buffer.byteLength(JSON.stringify(settings), "utf8") > 64 * 1024) {
+    return "Settings payload is too large (64 KB maximum).";
+  }
+  return null;
+}
+
+app.get("/api/guilds/:guildId/settings", async (req, res) => {
+  const { guildId } = req.params;
+  if (!validSnowflake(guildId)) {
+    return res.status(400).json({ error: "invalid_guild_id", message: "Invalid server ID." });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+    await ensureDatabase();
+
+    const result = await pool.query(
+      "SELECT settings, updated_by, updated_at FROM guild_settings WHERE guild_id = $1",
+      [guildId]
+    );
+    const row = result.rows[0];
+    const settings = row
+      ? (typeof row.settings === "string" ? JSON.parse(row.settings) : row.settings)
+      : { commands: {}, modules: {} };
+
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      settings,
+      updatedBy: row?.updated_by || null,
+      updatedAt: row?.updated_at || null
+    });
+  } catch (error) {
+    console.error("Load guild settings failed:", error);
+    return res.status(500).json({ error: "settings_load_failed", message: "Could not load server settings." });
+  }
+});
+
+app.put("/api/guilds/:guildId/settings", async (req, res) => {
+  const { guildId } = req.params;
+  if (!validSnowflake(guildId)) {
+    return res.status(400).json({ error: "invalid_guild_id", message: "Invalid server ID." });
+  }
+
+  try {
+    const access = await getGuildAuthorization(req, res, guildId);
+    if (!access) return;
+
+    const settings = req.body?.settings;
+    const validationError = validateGuildSettings(settings);
+    if (validationError) {
+      return res.status(400).json({ error: "invalid_settings", message: validationError });
+    }
+
+    await ensureDatabase();
+    const result = await pool.query(
+      `INSERT INTO guild_settings (guild_id, settings, updated_by)
+       VALUES ($1, $2::jsonb, $3)
+       ON CONFLICT (guild_id) DO UPDATE
+       SET settings = EXCLUDED.settings,
+           updated_by = EXCLUDED.updated_by,
+           updated_at = NOW()
+       RETURNING settings, updated_by, updated_at`,
+      [guildId, JSON.stringify(settings), access.auth.user.id]
+    );
+    const row = result.rows[0];
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      success: true,
+      settings: typeof row.settings === "string" ? JSON.parse(row.settings) : row.settings,
+      updatedBy: row.updated_by,
+      updatedAt: row.updated_at
+    });
+  } catch (error) {
+    console.error("Save guild settings failed:", error);
+    return res.status(500).json({ error: "settings_save_failed", message: "Could not save server settings." });
   }
 });
 
