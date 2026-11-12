@@ -171,6 +171,7 @@ const serverTranslations = {
         settings: "⚙️ إعدادات السيرفر",
         description: "اختر الأداة التي تريد استخدامها في هذا السيرفر.",
         embedStudio: "🎨 فتح منشئ الـ Embed",
+        ticketStudio: "🎫 نظام التكتات وإنشاء Panels",
         back: "العودة إلى الداشبورد",
         login: "يرجى تسجيل الدخول أولاً.",
         noAccess: "ليس لديك صلاحية الوصول إلى هذا السيرفر.",
@@ -187,6 +188,7 @@ const serverTranslations = {
         settings: "⚙️ Server Settings",
         description: "Choose the tool you want to use on this server.",
         embedStudio: "🎨 Open Embed Studio",
+        ticketStudio: "🎫 Ticket System & Panel Builder",
         back: "Back to Dashboard",
         login: "Please log in first.",
         noAccess: "You do not have permission to access this server.",
@@ -203,6 +205,7 @@ const serverTranslations = {
         settings: "⚙️ Paramètres du serveur",
         description: "Choisissez l’outil que vous souhaitez utiliser sur ce serveur.",
         embedStudio: "🎨 Ouvrir Embed Studio",
+        ticketStudio: "🎫 Système de tickets et Panels",
         back: "Retour au tableau de bord",
         login: "Veuillez d’abord vous connecter.",
         noAccess: "Vous n’avez pas accès à ce serveur.",
@@ -219,6 +222,7 @@ const serverTranslations = {
         settings: "⚙️ Servereinstellungen",
         description: "Wähle das Werkzeug aus, das du auf diesem Server verwenden möchtest.",
         embedStudio: "🎨 Embed Studio öffnen",
+        ticketStudio: "🎫 Ticket-System und Panels",
         back: "Zurück zum Dashboard",
         login: "Bitte melde dich zuerst an.",
         noAccess: "Du hast keine Berechtigung für diesen Server.",
@@ -235,6 +239,7 @@ const serverTranslations = {
         settings: "⚙️ Configuración del servidor",
         description: "Elige la herramienta que deseas utilizar en este servidor.",
         embedStudio: "🎨 Abrir Embed Studio",
+        ticketStudio: "🎫 Sistema de tickets y Panels",
         back: "Volver al panel principal",
         login: "Inicia sesión primero.",
         noAccess: "No tienes permiso para acceder a este servidor.",
@@ -438,11 +443,16 @@ function renderServerPage() {
 
     embedButton.textContent = serverText.embedStudio;
 
+    const ticketButton = document.createElement("a");
+    ticketButton.className = "embed-button";
+    ticketButton.href = `/tickets.html?guild=${encodeURIComponent(currentGuild.id)}`;
+    ticketButton.textContent = serverText.ticketStudio;
 
     section.append(
         heading,
         description,
-        embedButton
+        embedButton,
+        ticketButton
     );
 
     elements.push(section);
