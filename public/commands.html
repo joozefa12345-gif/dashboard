@@ -77,15 +77,34 @@ async function load(){
  document.getElementById("back").href="/server.html?guild="+encodeURIComponent(guildId);
  statusEl.textContent="جارٍ تحميل الإعدادات والرتب والرومات...";
  try{
-  const results=await Promise.all([api("/api/guilds/"+guildId+"/settings"),api("/api/guilds/"+guildId+"/roles"),api("/api/guilds/"+guildId+"/channels")]);
-  if(results.some(r=>r.status===401)){location.href="/?login=required";return}
-  if(results.some(r=>!r.ok))throw new Error("تعذر تحميل بعض بيانات السيرفر. تأكد من صلاحيات البوت وتسجيل الدخول.");
-  const [s,r,c]=await Promise.all(results.map(x=>x.json()));
-  settings=s.settings||{commands:{},modules:{}};
-  roles=r.roles||[];channels=c.channels||[];
+  const endpoints=[
+   ["الإعدادات","/api/guilds/"+guildId+"/settings"],
+   ["الرتب","/api/guilds/"+guildId+"/roles"],
+   ["الرومات","/api/guilds/"+guildId+"/channels"]
+  ];
+  const results=await Promise.all(endpoints.map(async ([name,path])=>{
+   try{
+    const response=await api(path);
+    const raw=await response.text();
+    let data={};try{data=raw?JSON.parse(raw):{}}catch{data={message:raw.slice(0,300)}}
+    return {name,response,data};
+   }catch(error){return {name,error}}
+  }));
+  const unauthorized=results.find(x=>x.response&&x.response.status===401);
+  if(unauthorized){location.href="/?login=required";return}
+  const failed=results.filter(x=>x.error||(x.response&&!x.response.ok));
+  if(failed.length){
+   const details=failed.map(x=>x.name+": "+(x.error?x.error.message:(x.data.message||x.data.error||("HTTP "+x.response.status)))).join(" | ");
+   throw new Error("فشل تحميل: "+details);
+  }
+  const [settingsResult,rolesResult,channelsResult]=results;
+  settings=settingsResult.data.settings||{commands:{},modules:{}};
+  roles=rolesResult.data.roles||[];
+  channels=channelsResult.data.channels||[];
+  if(!Array.isArray(roles)||!Array.isArray(channels))throw new Error("استجابة الرتب أو الرومات غير صحيحة من الخادم.");
   document.getElementById("guildName").textContent="إدارة أوامر السيرفر";
   render();statusEl.textContent="تم تحميل البيانات. اختَر الإعدادات ثم اضغط حفظ.";
- }catch(e){statusEl.textContent=e.message||"حدث خطأ أثناء التحميل."}
+ }catch(e){statusEl.textContent="خطأ أثناء التحميل: "+(e.message||"سبب غير معروف");console.error("Rumble command settings load failed:",e)}
 }
 async function save(){
  const button=document.getElementById("save");button.disabled=true;statusEl.textContent="جارٍ حفظ الإعدادات...";
