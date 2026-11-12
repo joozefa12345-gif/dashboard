@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rumble System | Command Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070d18;color:#fff;font-family:Cairo,sans-serif}
+header{padding:22px;text-align:center;background:#101a2b;border-bottom:1px solid #258cff}
+h1{margin:0;color:#258cff}header p{color:#a9bdd5}
+main{max-width:1050px;margin:30px auto;padding:16px}
+.card{background:#101a2b;border:1px solid #24466d;border-radius:16px;padding:20px;margin:16px 0}
+.toolbar,.row{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+label{display:block;color:#a9bdd5;margin:12px 0 6px}
+select,button{font:inherit;border-radius:9px;padding:10px;background:#091225;color:#fff;border:1px solid #31577f}
+select{min-width:220px;max-width:100%}select[multiple]{min-width:260px;min-height:115px}
+button{cursor:pointer;background:#126bd0;border-color:#258cff;font-weight:700}
+button:disabled{opacity:.5;cursor:wait}
+.command{border-top:1px solid #24466d;padding:16px 0}
+.command:first-child{border:0}
+.command h3{margin:0;color:#64b5ff}
+small,.muted{color:#a9bdd5}
+.toggle{display:flex;align-items:center;gap:8px}
+.toggle input{width:18px;height:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+#status{min-height:28px;margin:12px 0;color:#64b5ff}
+.back{display:inline-block;color:#8fcaff;text-decoration:none;margin:12px 0}
+.note{background:#1a2434;border-right:3px solid #e6ad43;padding:12px;border-radius:8px;color:#f1d7a3}
+@media(max-width:600px){select{width:100%}.toolbar{align-items:flex-start}}
+</style>
+</head>
+<body>
+<header><h1>⚙️ إدارة أوامر Rumble</h1><p>تحكم في تفعيل الأوامر والرتب والرومات المسموح بها</p></header>
+<main>
+<a class="back" id="back" href="/server.html">← الرجوع للسيرفر</a>
+<div class="card">
+ <div class="toolbar"><div><h2 id="guildName">إعدادات السيرفر</h2><p class="muted">اختَر الأمر ثم حدّد صلاحيات استخدامه.</p></div><button id="reload">إعادة تحميل</button></div>
+ <div class="note">تنبيه: الصفحة تحفظ إعدادات التحكم في قاعدة البيانات. تطبيق هذه القيود على تنفيذ أوامر البوت نفسه يحتاج ربطها بكود البوت في خطوة لاحقة.</div>
+ <div id="status" role="status">جارٍ تحميل البيانات...</div>
+</div>
+<div class="card"><h2>الأوامر</h2><div id="commands"></div><div class="actions"><button id="save">حفظ كل الإعدادات</button></div></div>
+</main>
+<script>
+const params=new URLSearchParams(location.search),guildId=params.get("guild");
+const statusEl=document.getElementById("status"),commandsEl=document.getElementById("commands");
+const catalog=[
+ ["rumble","/rumble","أداة تشفير الكلمات"],["setup","/setup","إعداد رومات التشفير"],
+ ["ban","/ban","حظر عضو"],["unban","/unban","فك الحظر"],["kick","/kick","طرد عضو"],
+ ["warn","/warn","تحذير عضو"],["warnings","/warnings","عرض التحذيرات"],["unwarn","/unwarn","حذف تحذير"],
+ ["mute","/mute","إسكات عضو"],["unmute","/unmute","إلغاء الإسكات"],["clear","/clear","مسح الرسائل"],
+ ["hide","/hide","إخفاء الروم"],["unhide","/unhide","إظهار الروم"]
+];
+let settings={commands:{},modules:{}},roles=[],channels=[];
+const api=(path,options={})=>fetch(path,{credentials:"same-origin",cache:"no-store",...options});
+function makeSelect(items,selected){const el=document.createElement("select");el.multiple=true;for(const item of items){const op=document.createElement("option");op.value=item.id;op.textContent=item.name;op.selected=(selected||[]).includes(item.id);el.append(op)}return el}
+function render(){
+ commandsEl.replaceChildren();
+ for(const [key,label,desc] of catalog){
+  const cfg=settings.commands[key]||{};
+  const section=document.createElement("section");section.className="command";
+  const top=document.createElement("div");top.className="toolbar";
+  const title=document.createElement("div");const h=document.createElement("h3");h.textContent=label;const p=document.createElement("small");p.textContent=desc;title.append(h,p);
+  const toggle=document.createElement("label");toggle.className="toggle";const input=document.createElement("input");input.type="checkbox";input.checked=cfg.enabled!==false;const text=document.createElement("span");text.textContent="مفعّل";input.addEventListener("change",()=>{text.textContent=input.checked?"مفعّل":"معطّل"});toggle.append(input,text);top.append(title,toggle);
+  const grid=document.createElement("div");grid.className="grid";
+  const roleBox=document.createElement("div");const roleLabel=document.createElement("label");roleLabel.textContent="الرتب المسموح لها (اختياري)";const roleSelect=makeSelect(roles,cfg.allowedRoleIds||[]);roleBox.append(roleLabel,roleSelect);
+  const channelBox=document.createElement("div");const channelLabel=document.createElement("label");channelLabel.textContent="الرومات المسموح فيها (اختياري)";const channelSelect=makeSelect(channels,cfg.allowedChannelIds||[]);channelBox.append(channelLabel,channelSelect);
+  const deniedRoleBox=document.createElement("div");const deniedRoleLabel=document.createElement("label");deniedRoleLabel.textContent="رتب ممنوعة (اختياري)";const deniedRoleSelect=makeSelect(roles,cfg.deniedRoleIds||[]);deniedRoleBox.append(deniedRoleLabel,deniedRoleSelect);
+  const deniedChannelBox=document.createElement("div");const deniedChannelLabel=document.createElement("label");deniedChannelLabel.textContent="رومات ممنوعة (اختياري)";const deniedChannelSelect=makeSelect(channels,cfg.deniedChannelIds||[]);deniedChannelBox.append(deniedChannelLabel,deniedChannelSelect);
+  grid.append(roleBox,channelBox,deniedRoleBox,deniedChannelBox);section.append(top,grid);
+  section._read=()=>({enabled:input.checked,allowedRoleIds:[...roleSelect.selectedOptions].map(x=>x.value),allowedChannelIds:[...channelSelect.selectedOptions].map(x=>x.value),deniedRoleIds:[...deniedRoleSelect.selectedOptions].map(x=>x.value),deniedChannelIds:[...deniedChannelSelect.selectedOptions].map(x=>x.value)});
+  section.dataset.command=key;commandsEl.append(section);
+ }
+}
+async function load(){
+ if(!guildId||!/^[0-9]{15,22}$/.test(guildId)){statusEl.textContent="رابط السيرفر غير صالح.";return}
+ document.getElementById("back").href="/server.html?guild="+encodeURIComponent(guildId);
+ statusEl.textContent="جارٍ تحميل الإعدادات والرتب والرومات...";
+ try{
+  const results=await Promise.all([api("/api/guilds/"+guildId+"/settings"),api("/api/guilds/"+guildId+"/roles"),api("/api/guilds/"+guildId+"/channels")]);
+  if(results.some(r=>r.status===401)){location.href="/?login=required";return}
+  if(results.some(r=>!r.ok))throw new Error("تعذر تحميل بعض بيانات السيرفر. تأكد من صلاحيات البوت وتسجيل الدخول.");
+  const [s,r,c]=await Promise.all(results.map(x=>x.json()));
+  settings=s.settings||{commands:{},modules:{}};
+  roles=r.roles||[];channels=c.channels||[];
+  document.getElementById("guildName").textContent="إدارة أوامر السيرفر";
+  render();statusEl.textContent="تم تحميل البيانات. اختَر الإعدادات ثم اضغط حفظ.";
+ }catch(e){statusEl.textContent=e.message||"حدث خطأ أثناء التحميل."}
+}
+async function save(){
+ const button=document.getElementById("save");button.disabled=true;statusEl.textContent="جارٍ حفظ الإعدادات...";
+ try{
+  for(const section of commandsEl.querySelectorAll("[data-command]"))settings.commands[section.dataset.command]=section._read();
+  const response=await api("/api/guilds/"+guildId+"/settings",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({settings})});
+  const data=await response.json();if(!response.ok)throw new Error(data.message||"فشل حفظ الإعدادات.");
+  settings=data.settings;statusEl.textContent="✅ تم حفظ الإعدادات بنجاح.";
+ }catch(e){statusEl.textContent=e.message||"حدث خطأ أثناء الحفظ."}
+ finally{button.disabled=false}
+}
+document.getElementById("save").addEventListener("click",save);
+document.getElementById("reload").addEventListener("click",load);
+load();
+</script>
+</body>
+</html>
