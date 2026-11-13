@@ -410,10 +410,47 @@ function canManageGuild(user, guild) {
   }
 }
 
-async function getDiscordGuilds(auth) {
-  return discordRequest("/users/@me/guilds", {
+const discordGuildCache = new Map();
+const DISCORD_GUILD_CACHE_TTL_MS = 15 * 1000;
+
+async function getDiscordGuilds(auth, { forceRefresh = false } = {}) {
+  const cacheKey = auth && auth.sid;
+  const now = Date.now();
+
+  if (!forceRefresh && cacheKey) {
+    const cached = discordGuildCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.promise;
+    }
+    if (cached) discordGuildCache.delete(cacheKey);
+  }
+
+  const request = discordRequest("/users/@me/guilds", {
     headers: { Authorization: `Bearer ${auth.accessToken}` }
+  }).then(result => {
+    // Cache only successful responses. Never preserve transient Discord failures.
+    if (cacheKey && result.response.ok) {
+      discordGuildCache.set(cacheKey, {
+        expiresAt: Date.now() + DISCORD_GUILD_CACHE_TTL_MS,
+        promise: Promise.resolve(result)
+      });
+    } else if (cacheKey) {
+      discordGuildCache.delete(cacheKey);
+    }
+    return result;
+  }).catch(error => {
+    if (cacheKey) discordGuildCache.delete(cacheKey);
+    throw error;
   });
+
+  // Share one in-flight request across simultaneous dashboard API calls.
+  if (cacheKey) {
+    discordGuildCache.set(cacheKey, {
+      expiresAt: now + DISCORD_GUILD_CACHE_TTL_MS,
+      promise: request
+    });
+  }
+  return request;
 }
 
 async function getGuildAuthorization(req, res, guildId) {
@@ -430,7 +467,7 @@ async function getGuildAuthorization(req, res, guildId) {
       res.status(401).json({ error: "login", message: "Your Discord session expired. Please login again." });
       return null;
     }
-    guildResult = await getDiscordGuilds(auth);
+    guildResult = await getDiscordGuilds(auth, { forceRefresh: true });
   }
 
   if (!guildResult.response.ok) {
@@ -688,7 +725,7 @@ app.get("/api/guilds", async (req, res) => {
     if (result.response.status === 401) {
       auth = await getValidSession(req, res, true);
       if (!auth) return res.status(401).json({ error: "login", message: "Please login again." });
-      result = await getDiscordGuilds(auth);
+      result = await getDiscordGuilds(auth, { forceRefresh: true });
     }
 
     if (!result.response.ok) {
