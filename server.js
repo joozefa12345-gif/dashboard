@@ -429,11 +429,13 @@ async function getDiscordGuilds(auth, { forceRefresh = false } = {}) {
     headers: { Authorization: `Bearer ${auth.accessToken}` }
   }).then(result => {
     // Cache only successful responses. Never preserve transient Discord failures.
-    if (result.response.ok && cacheKey) {
+    if (cacheKey && result.response.ok) {
       discordGuildCache.set(cacheKey, {
         expiresAt: Date.now() + DISCORD_GUILD_CACHE_TTL_MS,
         promise: Promise.resolve(result)
       });
+    } else if (cacheKey) {
+      discordGuildCache.delete(cacheKey);
     }
     return result;
   }).catch(error => {
