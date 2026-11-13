@@ -355,10 +355,27 @@ async function getValidSession(req, res, forceRefresh = false) {
           ]
         );
       } catch (error) {
-        await client.query("DELETE FROM oauth_sessions WHERE sid = $1", [cookie.sid]);
-        await client.query("COMMIT");
-        clearCookie(res, COOKIE_NAME);
-        return null;
+        // Only discard the session when Discord definitively rejects the refresh token.
+        // Temporary Discord/network failures must not log the user out.
+        console.error("Discord OAuth token refresh failed:", {
+          status: error.status || null,
+          message: error.message || "Unknown refresh error"
+        });
+
+        const definitiveRejection =
+          Number.isInteger(error.status) &&
+          error.status >= 400 &&
+          error.status < 500 &&
+          error.status !== 429;
+
+        if (definitiveRejection) {
+          await client.query("DELETE FROM oauth_sessions WHERE sid = $1", [cookie.sid]);
+          await client.query("COMMIT");
+          clearCookie(res, COOKIE_NAME);
+          return null;
+        }
+
+        throw error;
       }
     }
 
