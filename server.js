@@ -460,14 +460,14 @@ async function getGuildAuthorization(req, res, guildId) {
     return null;
   }
 
-  let guildResult = await getDiscordGuilds(auth, { forceRefresh: true });
+  let guildResult = await getDiscordGuilds(auth);
   if (guildResult.response.status === 401) {
     auth = await getValidSession(req, res, true);
     if (!auth) {
       res.status(401).json({ error: "login", message: "Your Discord session expired. Please login again." });
       return null;
     }
-    guildResult = await getDiscordGuilds(auth);
+    guildResult = await getDiscordGuilds(auth, { forceRefresh: true });
   }
 
   if (!guildResult.response.ok) {
@@ -721,11 +721,11 @@ app.get("/api/guilds", async (req, res) => {
     let auth = await getValidSession(req, res);
     if (!auth) return res.status(401).json({ error: "login", message: "Please login with Discord." });
 
-    let result = await getDiscordGuilds(auth, { forceRefresh: true });
+    let result = await getDiscordGuilds(auth);
     if (result.response.status === 401) {
       auth = await getValidSession(req, res, true);
       if (!auth) return res.status(401).json({ error: "login", message: "Please login again." });
-      result = await getDiscordGuilds(auth);
+      result = await getDiscordGuilds(auth, { forceRefresh: true });
     }
 
     if (!result.response.ok) {
